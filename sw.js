@@ -1,4 +1,4 @@
-const CACHE_NAME = 'shifty-v9';
+const CACHE_NAME = 'shifty-v14';
 const ASSETS = ['/', '/index.html', '/styles.css', '/app.js', '/ai-agent.js', '/gamification.js', '/groups.js', '/icons.js'];
 
 self.addEventListener('install', (e) => {

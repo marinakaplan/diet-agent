@@ -1,4 +1,4 @@
-import { put, list } from '@vercel/blob';
+import { put } from '@vercel/blob';
 
 function generateId() {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -7,14 +7,8 @@ function generateId() {
     return 'u_' + id;
 }
 
-async function generateUniqueFriendCode() {
-    for (let attempt = 0; attempt < 20; attempt++) {
-        const code = 'SHFT-' + String(Math.floor(1000 + Math.random() * 9000));
-        const { blobs } = await list({ prefix: `friendcode-${code}` });
-        if (blobs.length === 0) return code;
-    }
-    // Fallback to 6 digits
-    return 'SHFT-' + String(Math.floor(100000 + Math.random() * 900000));
+function generateFriendCode() {
+    return 'SHFT-' + String(Math.floor(1000 + Math.random() * 9000));
 }
 
 export default async function handler(req, res) {
@@ -23,7 +17,7 @@ export default async function handler(req, res) {
     try {
         const { displayName } = req.body || {};
         const userId = generateId();
-        const friendCode = await generateUniqueFriendCode();
+        const friendCode = generateFriendCode();
 
         const userData = {
             userId,
@@ -35,15 +29,15 @@ export default async function handler(req, res) {
             data: {}
         };
 
-        // Save user blob
-        await put(`users/${userId}.json`, JSON.stringify(userData), {
-            access: 'public', addRandomSuffix: false, contentType: 'application/json'
-        });
-
-        // Save friend code lookup
-        await put(`friendcode-${friendCode}.json`, JSON.stringify({ userId, friendCode }), {
-            access: 'public', addRandomSuffix: false, contentType: 'application/json'
-        });
+        // Save user + friend code in parallel
+        await Promise.all([
+            put(`users/${userId}.json`, JSON.stringify(userData), {
+                access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json'
+            }),
+            put(`friendcode-${friendCode}.json`, JSON.stringify({ userId, friendCode }), {
+                access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json'
+            })
+        ]);
 
         return res.status(200).json({ userId, friendCode });
     } catch (error) {

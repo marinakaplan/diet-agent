@@ -1,4 +1,4 @@
-import { list } from '@vercel/blob';
+import { readBlob } from './_utils.js';
 
 export default async function handler(req, res) {
     if (req.method !== 'GET') {
@@ -6,15 +6,8 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { blobs } = await list({ prefix: 'diet-agent-data' });
-
-        if (blobs.length === 0) {
-            return res.status(200).json({ data: null });
-        }
-
-        const response = await fetch(blobs[0].url);
-        const data = await response.json();
-        return res.status(200).json({ data });
+        const data = await readBlob('diet-agent-data');
+        return res.status(200).json({ data: data || null });
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }

@@ -88,8 +88,9 @@ async function loadFromCloud() {
 function getProfile() {
     return getData('profile', {
         name: '', age: '', height: '', gender: '',
-        targetWeight: '', targetCalories: 1500,
-        targetProtein: 80, targetCarbs: 150, targetFat: 50,
+        activityLevel: 'light',
+        targetWeight: '', targetCalories: '',
+        targetProtein: '', targetCarbs: '', targetFat: '', targetFiber: '',
         apiKey: ''
     });
 }
@@ -387,6 +388,15 @@ function saveMeal() {
     addXP(XP_REWARDS.log_meal, 'log_meal');
     markTodayActive();
     checkAchievements();
+
+    // Share to groups feed
+    const savedMeal = meals[meals.length - 1];
+    postGroupActivity('meal', {
+        mealType: savedMeal.mealType,
+        description: savedMeal.description,
+        calories: savedMeal.calories,
+        protein: savedMeal.protein
+    });
 
     refreshFoodLog();
     refreshFoodGallery();
@@ -751,12 +761,15 @@ function saveWeight() {
     weights.sort((a, b) => a.date.localeCompare(b.date));
     setData('weights', weights);
     closeModal('weight-modal');
-    showToast('המשקל נשמר ✓');
+    showToast('המשקל נשמר');
 
     // Gamification
     addXP(XP_REWARDS.weigh_in, 'weigh_in');
     markTodayActive();
     checkAchievements();
+
+    // Share to groups feed
+    postGroupActivity('weight', { weight: val });
 
     refreshMetrics();
     refreshDashboard();
@@ -805,6 +818,154 @@ function saveBloodTests() {
     refreshMetrics();
 }
 
+// ============ Smart Goals Calculator ============
+function getCurrentWeight() {
+    const weights = getData('weights', []);
+    if (weights.length === 0) return 0;
+    const sorted = [...weights].sort((a, b) => b.date.localeCompare(a.date));
+    return sorted[0].value;
+}
+
+function saveCurrentWeight() {
+    const val = parseFloat(document.getElementById('profile-current-weight').value);
+    if (!val) return;
+
+    const weights = getData('weights', []);
+    const today = getTodayKey();
+    // Update today's entry or add new
+    const idx = weights.findIndex(w => w.date === today);
+    if (idx >= 0) {
+        weights[idx].value = val;
+    } else {
+        weights.push({ value: val, date: today });
+    }
+    weights.sort((a, b) => a.date.localeCompare(b.date));
+    setData('weights', weights);
+    updateProfileHeader();
+    showToast('המשקל עודכן');
+}
+
+function calculateSmartGoals() {
+    const profile = getProfile();
+    const age = parseInt(profile.age);
+    const height = parseInt(profile.height);
+    const gender = profile.gender;
+
+    if (!age || !height) {
+        showToast('מלאי קודם גיל וגובה');
+        return;
+    }
+
+    // Get current weight from field or from weights history
+    let currentWeight = parseFloat(document.getElementById('profile-current-weight').value) || getCurrentWeight();
+
+    if (!currentWeight) {
+        showToast('מלאי את המשקל הנוכחי שלך');
+        return;
+    }
+
+    if (!gender) {
+        showToast('בחרי מין בפרטים אישיים');
+        return;
+    }
+
+    // Mifflin-St Jeor equation for BMR
+    let bmr;
+    if (gender === 'male') {
+        bmr = 10 * currentWeight + 6.25 * height - 5 * age + 5;
+    } else {
+        bmr = 10 * currentWeight + 6.25 * height - 5 * age - 161;
+    }
+
+    // TDEE based on activity level
+    const activityLevel = document.getElementById('profile-activity-level').value || 'light';
+    const activityMultipliers = {
+        sedentary: 1.2,
+        light: 1.375,
+        moderate: 1.55,
+        active: 1.725
+    };
+    const activityLabels = {
+        sedentary: 'יושבנית',
+        light: 'קלה',
+        moderate: 'בינונית',
+        active: 'גבוהה'
+    };
+    const multiplier = activityMultipliers[activityLevel] || 1.375;
+    const tdee = Math.round(bmr * multiplier);
+
+    // Calorie deficit for weight loss (500 cal deficit, min 1200)
+    const targetCalories = Math.round(Math.max(1200, tdee - 500));
+
+    // Target weight: use existing or suggest BMI-based
+    const existingTargetWeight = parseFloat(document.getElementById('profile-target-weight').value);
+    const bmiHealthyWeight = Math.round(22 * (height / 100) * (height / 100));
+    const useTargetWeight = existingTargetWeight || bmiHealthyWeight;
+    if (!existingTargetWeight) {
+        document.getElementById('profile-target-weight').value = useTargetWeight;
+    }
+
+    // Protein: 1.6g per kg (recommended for fat loss + muscle preservation)
+    const targetProtein = Math.round(currentWeight * 1.6);
+
+    // Remaining calories split: ~55% carbs, ~45% fat
+    const proteinCalories = targetProtein * 4;
+    const remainingCalories = Math.max(400, targetCalories - proteinCalories);
+    const targetCarbs = Math.round((remainingCalories * 0.55) / 4);
+    const targetFat = Math.round((remainingCalories * 0.45) / 9);
+
+    // Fiber: 14g per 1000 cal (standard recommendation)
+    const targetFiber = Math.round(targetCalories / 1000 * 14);
+
+    // Fill in values
+    document.getElementById('profile-target-calories').value = targetCalories;
+    document.getElementById('profile-target-protein').value = targetProtein;
+    document.getElementById('profile-target-carbs').value = targetCarbs;
+    document.getElementById('profile-target-fat').value = targetFat;
+    document.getElementById('profile-target-fiber').value = targetFiber;
+
+    saveProfile();
+
+    // Show explanation
+    const hint = document.getElementById('smart-calc-hint');
+    hint.style.display = 'block';
+    hint.innerHTML = `
+        <div class="smart-calc-result">
+            <div class="smart-calc-title">המלצה מותאמת אישית</div>
+            <div class="smart-calc-details">
+                <strong>${currentWeight}</strong> ק"ג · ${height} ס"מ · גיל ${age} · פעילות ${activityLabels[activityLevel]}
+                <br>קצב מטבוליזם בסיסי (BMR): <strong>${Math.round(bmr)}</strong> קל׳
+                <br>צריכה יומית (TDEE): <strong>${tdee}</strong> קל׳
+                <br>לירידה בריאה (גרעון 500): <strong>${targetCalories}</strong> קל׳
+                ${!existingTargetWeight ? `<br>משקל יעד מומלץ (BMI 22): <strong>${bmiHealthyWeight}</strong> ק"ג` : ''}
+            </div>
+        </div>
+    `;
+
+    showToast('היעדים עודכנו');
+}
+
+function updateProfileHeader() {
+    const profile = getProfile();
+    const nameEl = document.getElementById('profile-display-name');
+    const metaEl = document.getElementById('profile-display-meta');
+
+    if (nameEl && profile.name) {
+        nameEl.textContent = profile.name;
+    }
+
+    if (metaEl) {
+        const parts = [];
+        if (profile.age) parts.push(`גיל ${profile.age}`);
+        if (profile.height) parts.push(`${profile.height} ס״מ`);
+        const cw = getCurrentWeight();
+        if (cw) parts.push(`${cw} ק״ג`);
+        if (profile.gender === 'female') parts.push('נקבה');
+        else if (profile.gender === 'male') parts.push('זכר');
+        metaEl.textContent = parts.join(' · ');
+    }
+}
+
 // ============ Profile ============
 function saveProfile() {
     const profile = {
@@ -812,11 +973,13 @@ function saveProfile() {
         age: document.getElementById('profile-age').value,
         height: document.getElementById('profile-height').value,
         gender: document.getElementById('profile-gender').value,
+        activityLevel: document.getElementById('profile-activity-level').value,
         targetWeight: document.getElementById('profile-target-weight').value,
-        targetCalories: parseInt(document.getElementById('profile-target-calories').value) || 1500,
-        targetProtein: parseInt(document.getElementById('profile-target-protein').value) || 80,
-        targetCarbs: parseInt(document.getElementById('profile-target-carbs').value) || 150,
-        targetFat: parseInt(document.getElementById('profile-target-fat').value) || 50,
+        targetCalories: parseInt(document.getElementById('profile-target-calories').value) || '',
+        targetProtein: parseInt(document.getElementById('profile-target-protein').value) || '',
+        targetCarbs: parseInt(document.getElementById('profile-target-carbs').value) || '',
+        targetFat: parseInt(document.getElementById('profile-target-fat').value) || '',
+        targetFiber: parseInt(document.getElementById('profile-target-fiber').value) || '',
         apiKey: document.getElementById('profile-api-key').value
     };
     setData('profile', profile);
@@ -828,12 +991,18 @@ function loadProfile() {
     document.getElementById('profile-age').value = p.age || '';
     document.getElementById('profile-height').value = p.height || '';
     document.getElementById('profile-gender').value = p.gender || '';
+    document.getElementById('profile-activity-level').value = p.activityLevel || 'light';
     document.getElementById('profile-target-weight').value = p.targetWeight || '';
-    document.getElementById('profile-target-calories').value = p.targetCalories || 1500;
-    document.getElementById('profile-target-protein').value = p.targetProtein || 80;
-    document.getElementById('profile-target-carbs').value = p.targetCarbs || 150;
-    document.getElementById('profile-target-fat').value = p.targetFat || 50;
+    document.getElementById('profile-target-calories').value = p.targetCalories || '';
+    document.getElementById('profile-target-protein').value = p.targetProtein || '';
+    document.getElementById('profile-target-carbs').value = p.targetCarbs || '';
+    document.getElementById('profile-target-fat').value = p.targetFat || '';
+    document.getElementById('profile-target-fiber').value = p.targetFiber || '';
     document.getElementById('profile-api-key').value = p.apiKey || '';
+    // Load current weight from weights history
+    const cw = getCurrentWeight();
+    if (cw) document.getElementById('profile-current-weight').value = cw;
+    updateProfileHeader();
 }
 
 // ============ Chat ============
@@ -1036,15 +1205,16 @@ function importData(event) {
 }
 
 function clearAllData() {
-    if (!confirm('למחוק את כל הנתונים? פעולה זו לא ניתנת לביטול!')) return;
-    const keys = [];
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key.startsWith('da_')) keys.push(key);
-    }
-    keys.forEach(k => localStorage.removeItem(k));
-    showToast('כל הנתונים נמחקו');
-    location.reload();
+    showConfirmModal('מחיקת נתונים', 'למחוק את כל הנתונים? פעולה זו לא ניתנת לביטול!', function() {
+        const keys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith('da_')) keys.push(key);
+        }
+        keys.forEach(k => localStorage.removeItem(k));
+        showToast('כל הנתונים נמחקו');
+        location.reload();
+    });
 }
 
 // ============ UI Helpers ============

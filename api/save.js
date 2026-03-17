@@ -14,6 +14,7 @@ export default async function handler(req, res) {
         const blob = await put('diet-agent-data.json', JSON.stringify(data), {
             access: 'public',
             addRandomSuffix: false,
+            allowOverwrite: true,
             contentType: 'application/json'
         });
 

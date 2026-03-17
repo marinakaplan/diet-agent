@@ -2,6 +2,18 @@
    שיפטי - Groups & Social System
    ============================================ */
 
+// ============ Custom Modal Helpers ============
+function showConfirmModal(title, text, onConfirm) {
+    document.getElementById('confirm-modal-title').textContent = title;
+    document.getElementById('confirm-modal-text').textContent = text;
+    const btn = document.getElementById('confirm-modal-btn');
+    btn.onclick = function() {
+        closeModal('confirm-modal');
+        onConfirm();
+    };
+    openModal('confirm-modal');
+}
+
 // ============ User Identity ============
 async function ensureUserIdentity() {
     let userId = getData('userId', null);
@@ -127,17 +139,37 @@ async function loadFromCloudWithUser() {
 }
 
 // ============ Groups ============
-async function createGroup() {
+function createGroup() {
     const userId = getUserId();
     if (!userId) {
         showToast('יש להירשם קודם');
-        return null;
+        return;
+    }
+    document.getElementById('input-group-name').value = '';
+    openModal('create-group-modal');
+    setTimeout(() => document.getElementById('input-group-name').focus(), 300);
+}
+
+async function submitCreateGroup() {
+    const groupName = document.getElementById('input-group-name').value.trim();
+    if (!groupName) {
+        showToast('הכניסי שם לקבוצה');
+        return;
+    }
+    closeModal('create-group-modal');
+
+    // Make sure user is registered
+    let userId = getUserId();
+    if (!userId) {
+        const identity = await ensureUserIdentity();
+        userId = identity.userId;
+    }
+    if (!userId) {
+        showToast('שגיאה בהרשמה, נסי שוב');
+        return;
     }
 
-    const groupName = prompt('שם הקבוצה:');
-    if (!groupName || !groupName.trim()) return null;
-
-    showLoading('יוצרת קבוצה...');
+    showLoading('יוצרת קבוצה... ⏳');
     try {
         const resp = await fetch('/api/group/create', {
             method: 'POST',
@@ -157,27 +189,88 @@ async function createGroup() {
         groups.push({ groupId: data.groupId, name: data.name, inviteCode: data.inviteCode });
         setData('myGroups', groups);
 
-        showToast('הקבוצה נוצרה! קוד: ' + data.inviteCode);
+        // Check social achievements
+        checkAchievements();
+
+        // Show success popup with share options
+        showGroupCreatedPopup(data.name, data.inviteCode);
         refreshGroupsPage();
         return data;
     } catch (e) {
         hideLoading();
-        showToast('שגיאה ביצירת קבוצה');
+        console.error('Create group error:', e);
+        if (e.name === 'AbortError' || e.message?.includes('timeout')) {
+            showToast('הבקשה נמשכה יותר מדי זמן, נסי שוב');
+        } else {
+            showToast('שגיאה ביצירת קבוצה: ' + (e.message || 'נסי שוב'));
+        }
         return null;
     }
 }
 
-async function joinGroup() {
+function showGroupCreatedPopup(groupName, inviteCode) {
+    const whatsappText = encodeURIComponent(`הי! 💪 פתחתי קבוצת דיאטה בשיפטי - אפליקציה חינמית למעקב אוכל ודיאטה ביחד!\n\nהקבוצה: "${groupName}"\n\nאיך להצטרף (לוקח דקה):\n1. לחצי על הלינק הזה:\nhttps://diet-agent.vercel.app\n2. תרשמי שם (רק שם ומשקל)\n3. לחצי למטה על "חברות" 👥\n4. לחצי "הצטרפי עם קוד"\n5. הכניסי את הקוד: *${inviteCode}*\n\nככה נוכל לראות אחת את השנייה, לעקוב על אוכל ומים ולעודד אחת את השנייה! 🙌`);
+
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'group-popup-overlay';
+    overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+    overlay.innerHTML = `
+        <div class="group-popup">
+            <div class="group-popup-icon">${icon('users', 40)}</div>
+            <h3 class="group-popup-title">הקבוצה נוצרה!</h3>
+            <p class="group-popup-subtitle">"${groupName}"</p>
+            <div class="group-popup-code-box">
+                <div class="group-popup-code-label">קוד הצטרפות</div>
+                <div class="group-popup-code">${inviteCode}</div>
+            </div>
+            <p class="group-popup-text">שלחי את הקוד לחברות שלך כדי שיצטרפו!</p>
+            <div class="group-popup-actions">
+                <a href="https://wa.me/?text=${whatsappText}" target="_blank" class="group-popup-btn group-popup-btn--whatsapp" onclick="this.closest('.group-popup-overlay').remove()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                    שלחי בוואטסאפ
+                </a>
+                <button class="group-popup-btn group-popup-btn--copy" onclick="navigator.clipboard.writeText('${inviteCode}'); showToast('הקוד הועתק!'); this.closest('.group-popup-overlay').remove()">
+                    ${icon('copy', 16)} העתיקי קוד
+                </button>
+            </div>
+            <button class="group-popup-close" onclick="this.closest('.group-popup-overlay').remove()">סגרי</button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+function joinGroup() {
     const userId = getUserId();
     if (!userId) {
         showToast('יש להירשם קודם');
         return;
     }
+    document.getElementById('input-invite-code').value = '';
+    openModal('join-group-modal');
+    setTimeout(() => document.getElementById('input-invite-code').focus(), 300);
+}
 
-    const inviteCode = prompt('הכניסי קוד הצטרפות:');
-    if (!inviteCode || !inviteCode.trim()) return;
+async function submitJoinGroup() {
+    const inviteCode = document.getElementById('input-invite-code').value.trim();
+    if (!inviteCode) {
+        showToast('הכניסי קוד הצטרפות');
+        return;
+    }
+    closeModal('join-group-modal');
 
-    showLoading('מצטרפת לקבוצה...');
+    // Make sure user is registered
+    let userId = getUserId();
+    if (!userId) {
+        const identity = await ensureUserIdentity();
+        userId = identity.userId;
+    }
+    if (!userId) {
+        showToast('שגיאה בהרשמה, נסי שוב');
+        return;
+    }
+
+    showLoading('מצטרפת לקבוצה... ⏳');
     try {
         const resp = await fetch('/api/group/join', {
             method: 'POST',
@@ -199,11 +292,17 @@ async function joinGroup() {
             setData('myGroups', groups);
         }
 
-        showToast('הצטרפת לקבוצה: ' + group.name);
+        // Check social achievements
+        checkAchievements();
+
+        showToast('הצטרפת לקבוצה: ' + group.name + '!');
+        // Auto-open the group
+        _activeGroupView = group.groupId;
         refreshGroupsPage();
     } catch (e) {
         hideLoading();
-        showToast('שגיאה בהצטרפות');
+        console.error('Join group error:', e);
+        showToast('שגיאה בהצטרפות: ' + (e.message || 'נסי שוב'));
     }
 }
 
@@ -229,9 +328,145 @@ function shareInviteCode(code, groupName) {
     }
 }
 
+// ============ Group Activity Feed ============
+async function postGroupActivity(type, data) {
+    const userId = getUserId();
+    if (!userId) return;
+
+    const groups = getData('myGroups', []);
+    if (groups.length === 0) return;
+
+    const groupIds = groups.map(g => g.groupId);
+
+    try {
+        await fetch('/api/group/activity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId,
+                groupIds,
+                activity: { type, data }
+            })
+        });
+    } catch (e) {
+        console.log('Activity post failed:', e.message);
+    }
+}
+
+async function loadGroupActivities(groupId) {
+    try {
+        const resp = await fetch(`/api/group/activity?groupId=${groupId}&limit=30`);
+        if (!resp.ok) return [];
+        const result = await resp.json();
+        return result.activities || [];
+    } catch {
+        return [];
+    }
+}
+
+function formatActivityTime(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMin = Math.floor(diffMs / 60000);
+    const diffHr = Math.floor(diffMs / 3600000);
+
+    if (diffMin < 1) return 'עכשיו';
+    if (diffMin < 60) return `לפני ${diffMin} דק׳`;
+    if (diffHr < 24) return `לפני ${diffHr} שע׳`;
+
+    const diffDays = Math.floor(diffMs / 86400000);
+    if (diffDays === 1) return 'אתמול';
+    if (diffDays < 7) return `לפני ${diffDays} ימים`;
+    return date.toLocaleDateString('he-IL', { day: 'numeric', month: 'short' });
+}
+
+function getActivityIcon(type) {
+    switch (type) {
+        case 'meal': return icon('utensils', 16);
+        case 'water': return icon('droplet', 16);
+        case 'weight': return icon('scale', 16);
+        case 'achievement': return icon('trophy', 16);
+        case 'streak': return icon('flame', 16);
+        default: return icon('star', 16);
+    }
+}
+
+function getActivityText(activity) {
+    const name = activity.displayName;
+    switch (activity.type) {
+        case 'meal': {
+            const d = activity.data;
+            const mealLabels = { breakfast: 'ארוחת בוקר', lunch: 'ארוחת צהריים', dinner: 'ארוחת ערב', snack: 'חטיף' };
+            const mealLabel = mealLabels[d.mealType] || 'ארוחה';
+            return `<strong>${name}</strong> רשמה ${mealLabel}${d.description ? ': ' + d.description : ''}`;
+        }
+        case 'water': {
+            const cups = activity.data.cups || 0;
+            if (cups >= 8) return `<strong>${name}</strong> השלימה יעד מים יומי! ${cups} כוסות`;
+            return `<strong>${name}</strong> שתתה כוס מים (${cups}/8)`;
+        }
+        case 'weight':
+            return `<strong>${name}</strong> עדכנה משקל: ${activity.data.weight} ק"ג`;
+        case 'achievement':
+            return `<strong>${name}</strong> השיגה הישג: ${activity.data.name || ''}`;
+        case 'streak':
+            return `<strong>${name}</strong> ברצף של ${activity.data.days} ימים!`;
+        default:
+            return `<strong>${name}</strong> עדכנה נתונים`;
+    }
+}
+
+function getActivityCalories(activity) {
+    if (activity.type === 'meal' && activity.data.calories) {
+        return `<span class="activity-cal">${activity.data.calories} קל׳</span>`;
+    }
+    return '';
+}
+
+function renderActivityFeed(activities) {
+    if (!activities || activities.length === 0) {
+        return `
+            <div class="activity-empty">
+                <div class="activity-empty-icon">${icon('clock', 32)}</div>
+                <div class="activity-empty-text">עדיין אין פעילות בקבוצה</div>
+                <div class="activity-empty-hint">כשחברות ירשמו ארוחות או ישתו מים, זה יופיע כאן</div>
+            </div>
+        `;
+    }
+
+    let html = '';
+    let lastDate = '';
+
+    activities.forEach(a => {
+        const date = new Date(a.timestamp).toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' });
+        if (date !== lastDate) {
+            html += `<div class="activity-date-divider">${date}</div>`;
+            lastDate = date;
+        }
+
+        html += `
+            <div class="activity-item activity-item--${a.type}">
+                <div class="activity-icon">${getActivityIcon(a.type)}</div>
+                <div class="activity-content">
+                    <div class="activity-text">${getActivityText(a)}</div>
+                    <div class="activity-meta">
+                        ${getActivityCalories(a)}
+                        <span class="activity-time">${formatActivityTime(a.timestamp)}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    return html;
+}
+
 // ============ Groups Page Render ============
 let _activeGroupView = null; // Track which group detail is open
 let _groupDataCache = {}; // Cache loaded leaderboard data
+let _activeGroupTab = {}; // Track active tab per group: 'leaderboard' or 'feed'
+let _activityCache = {}; // Cache loaded activity feeds
 
 function refreshGroupsPage() {
     const container = document.getElementById('groups-content');
@@ -371,7 +606,39 @@ async function loadGroupDetail(groupId) {
         </div>
     `;
 
-    // Leaderboard
+    // Tabs: Leaderboard / Feed
+    const activeTab = _activeGroupTab[groupId] || 'feed';
+    html += `
+        <div class="group-tabs">
+            <button class="group-tab ${activeTab === 'feed' ? 'group-tab--active' : ''}" onclick="event.stopPropagation(); switchGroupTab('${groupId}', 'feed')">
+                ${icon('clock', 14)} פיד פעילות
+            </button>
+            <button class="group-tab ${activeTab === 'leaderboard' ? 'group-tab--active' : ''}" onclick="event.stopPropagation(); switchGroupTab('${groupId}', 'leaderboard')">
+                ${icon('trophy', 14)} לידרבורד
+            </button>
+        </div>
+    `;
+
+    // Activity Feed Tab
+    if (activeTab === 'feed') {
+        html += `<div class="group-detail-feed" id="feed-${groupId}">`;
+        const activities = _activityCache[groupId];
+        if (activities === undefined) {
+            html += `<div class="activity-loading">טוענת פעילויות...</div>`;
+            // Load activities async
+            loadGroupActivities(groupId).then(acts => {
+                _activityCache[groupId] = acts;
+                const feedEl = document.getElementById('feed-' + groupId);
+                if (feedEl) feedEl.innerHTML = renderActivityFeed(acts);
+            });
+        } else {
+            html += renderActivityFeed(activities);
+        }
+        html += `</div>`;
+    }
+
+    // Leaderboard Tab
+    if (activeTab === 'leaderboard') {
     html += `<div class="group-detail-leaderboard">`;
     html += `<div class="group-detail-lb-title">${icon('trophy', 18)} לידרבורד</div>`;
 
@@ -425,6 +692,7 @@ async function loadGroupDetail(groupId) {
         </div>
     `;
     html += `</div>`;
+    } // end leaderboard tab
 
     // Update member count in header
     const metaEl = document.querySelector(`#group-${groupId} .group-card-meta`);
@@ -433,6 +701,13 @@ async function loadGroupDetail(groupId) {
     }
 
     detailContainer.innerHTML = html;
+}
+
+async function switchGroupTab(groupId, tab) {
+    _activeGroupTab[groupId] = tab;
+    // Clear activity cache to force refresh when switching to feed
+    if (tab === 'feed') delete _activityCache[groupId];
+    await loadGroupDetail(groupId);
 }
 
 function isRecentlyActive(lastActive) {
@@ -450,8 +725,13 @@ function copyGroupCode(code) {
     navigator.clipboard.writeText(code).then(() => showToast('קוד הקבוצה הועתק!'));
 }
 
-async function leaveGroup(groupId) {
-    if (!confirm('בטוחה שאת רוצה לעזוב את הקבוצה?')) return;
+function leaveGroup(groupId) {
+    showConfirmModal('עזיבת קבוצה', 'בטוחה שאת רוצה לעזוב את הקבוצה?', function() {
+        doLeaveGroup(groupId);
+    });
+}
+
+async function doLeaveGroup(groupId) {
 
     const groups = getData('myGroups', []);
     const updated = groups.filter(g => g.groupId !== groupId);

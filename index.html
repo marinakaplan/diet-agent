@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
-    <link rel="stylesheet" href="styles.css?v=9">
+    <link rel="stylesheet" href="styles.css?v=14">
 </head>
 <body>
     <!-- Welcome / Login Screen -->
@@ -384,16 +384,28 @@
 
             <!-- ==================== PROFILE ==================== -->
             <section id="page-profile" class="page">
+                <!-- Profile Header Card -->
+                <div class="profile-header-card">
+                    <div class="profile-avatar-large" id="profile-avatar-display">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
+                    <div class="profile-header-info">
+                        <div class="profile-header-name" id="profile-display-name">הפרופיל שלי</div>
+                        <div class="profile-header-meta" id="profile-display-meta"></div>
+                    </div>
+                </div>
+
+                <!-- Personal Details -->
                 <div class="profile-section">
                     <h3>פרטים אישיים</h3>
                     <div class="form-grid">
                         <div class="form-group">
                             <label>שם</label>
-                            <input type="text" id="profile-name" placeholder="השם שלך" onchange="saveProfile()">
+                            <input type="text" id="profile-name" placeholder="השם שלך" onchange="saveProfile(); updateProfileHeader()">
                         </div>
                         <div class="form-group">
                             <label>גיל</label>
-                            <input type="number" id="profile-age" placeholder="30" onchange="saveProfile()">
+                            <input type="number" id="profile-age" placeholder="25" onchange="saveProfile(); updateProfileHeader()">
                         </div>
                         <div class="form-group">
                             <label>גובה (ס״מ)</label>
@@ -407,11 +419,32 @@
                                 <option value="male">זכר</option>
                             </select>
                         </div>
+                        <div class="form-group">
+                            <label>משקל נוכחי (ק״ג)</label>
+                            <input type="number" id="profile-current-weight" placeholder="70" step="0.1" onchange="saveCurrentWeight()">
+                        </div>
+                        <div class="form-group">
+                            <label>רמת פעילות</label>
+                            <select id="profile-activity-level" onchange="saveProfile()">
+                                <option value="sedentary">יושבנית (ללא ספורט)</option>
+                                <option value="light" selected>קלה (1-3 פעמים בשבוע)</option>
+                                <option value="moderate">בינונית (3-5 פעמים)</option>
+                                <option value="active">גבוהה (6-7 פעמים)</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Goals with Smart Recommendations -->
                 <div class="profile-section">
-                    <h3>יעדים</h3>
+                    <div class="profile-section-header">
+                        <h3>יעדים יומיים</h3>
+                        <button class="btn-smart-calc" onclick="calculateSmartGoals()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                            חשבי לי
+                        </button>
+                    </div>
+                    <div class="smart-calc-hint" id="smart-calc-hint" style="display:none"></div>
                     <div class="form-grid">
                         <div class="form-group">
                             <label>משקל יעד (ק״ג)</label>
@@ -419,34 +452,31 @@
                         </div>
                         <div class="form-group">
                             <label>קלוריות יומיות</label>
-                            <input type="number" id="profile-target-calories" placeholder="1500" onchange="saveProfile()">
+                            <input type="number" id="profile-target-calories" placeholder="--" onchange="saveProfile()">
                         </div>
                         <div class="form-group">
                             <label>חלבון יומי (גר׳)</label>
-                            <input type="number" id="profile-target-protein" placeholder="80" onchange="saveProfile()">
+                            <input type="number" id="profile-target-protein" placeholder="--" onchange="saveProfile()">
                         </div>
                         <div class="form-group">
                             <label>פחמימות יומיות (גר׳)</label>
-                            <input type="number" id="profile-target-carbs" placeholder="150" onchange="saveProfile()">
+                            <input type="number" id="profile-target-carbs" placeholder="--" onchange="saveProfile()">
                         </div>
                         <div class="form-group">
                             <label>שומן יומי (גר׳)</label>
-                            <input type="number" id="profile-target-fat" placeholder="50" onchange="saveProfile()">
+                            <input type="number" id="profile-target-fat" placeholder="--" onchange="saveProfile()">
+                        </div>
+                        <div class="form-group">
+                            <label>סיבים יומיים (גר׳)</label>
+                            <input type="number" id="profile-target-fiber" placeholder="--" onchange="saveProfile()">
                         </div>
                     </div>
                 </div>
 
-                <div class="profile-section">
-                    <h3>הגדרות AI</h3>
-                    <div class="form-grid">
-                        <div class="form-group full-width">
-                            <label>Claude API Key (לפיתוח מקומי בלבד)</label>
-                            <input type="password" id="profile-api-key" placeholder="sk-ant-..." onchange="saveProfile()">
-                            <small class="form-hint">ב-Vercel ה-key מוגדר כ-Environment Variable בצד השרת</small>
-                        </div>
-                    </div>
-                </div>
+                <!-- AI Settings (hidden - internal use only) -->
+                <input type="hidden" id="profile-api-key">
 
+                <!-- Data Actions -->
                 <div class="profile-section">
                     <h3>נתונים</h3>
                     <div class="data-actions">
@@ -459,6 +489,7 @@
                     </div>
                 </div>
 
+                <!-- WhatsApp Feedback -->
                 <div class="profile-section">
                     <h3>משוב ושיפורים</h3>
                     <p class="feedback-text">נתקלת בבאג? יש לך רעיון? כתבי לי בוואטסאפ!</p>
@@ -573,6 +604,62 @@
             </div>
         </div>
 
+        <!-- Create Group Modal -->
+        <div class="modal-overlay" id="create-group-modal" onclick="closeModalOverlay(event)">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3>צרי קבוצה חדשה</h3>
+                    <button class="modal-close" onclick="closeModal('create-group-modal')">&#10005;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>שם הקבוצה</label>
+                        <input type="text" id="input-group-name" placeholder="למשל: חברות לדיאטה" maxlength="30">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-primary" onclick="submitCreateGroup()">צרי קבוצה</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Join Group Modal -->
+        <div class="modal-overlay" id="join-group-modal" onclick="closeModalOverlay(event)">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3>הצטרפי לקבוצה</h3>
+                    <button class="modal-close" onclick="closeModal('join-group-modal')">&#10005;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>קוד הצטרפות (4 ספרות)</label>
+                        <input type="text" id="input-invite-code" placeholder="1234" maxlength="4" inputmode="numeric" style="font-size:1.5rem;text-align:center;letter-spacing:8px;font-weight:700;">
+                    </div>
+                    <p style="font-size:0.78rem;color:var(--text-muted);margin-top:8px;">קבלי את הקוד מהחברה שיצרה את הקבוצה</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-primary" onclick="submitJoinGroup()">הצטרפי</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirm Modal -->
+        <div class="modal-overlay" id="confirm-modal" onclick="closeModalOverlay(event)">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 id="confirm-modal-title">אישור</h3>
+                    <button class="modal-close" onclick="closeModal('confirm-modal')">&#10005;</button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirm-modal-text"></p>
+                </div>
+                <div class="modal-footer" style="display:flex;gap:8px;">
+                    <button class="btn-secondary" onclick="closeModal('confirm-modal')" style="flex:1">ביטול</button>
+                    <button class="btn-danger" id="confirm-modal-btn" onclick="" style="flex:1">אישור</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Bottom Navigation -->
         <nav id="bottom-nav">
             <button class="nav-item active" data-page="home" onclick="navigateTo('home')">
@@ -607,10 +694,10 @@
     <!-- Toast -->
     <div id="toast" class="toast hidden"></div>
 
-    <script src="icons.js?v=9"></script>
-    <script src="ai-agent.js?v=9"></script>
-    <script src="gamification.js?v=9"></script>
-    <script src="groups.js?v=9"></script>
-    <script src="app.js?v=9"></script>
+    <script src="icons.js?v=14"></script>
+    <script src="ai-agent.js?v=14"></script>
+    <script src="gamification.js?v=14"></script>
+    <script src="groups.js?v=14"></script>
+    <script src="app.js?v=14"></script>
 </body>
 </html>

@@ -197,8 +197,14 @@ function addWaterCup() {
         addXP(XP_REWARDS.water_complete, 'water_complete');
         showToast('שתית 8 כוסות מים! +15 XP');
         checkAchievements();
+        // Share water milestone to groups
+        postGroupActivity('water', { cups });
     } else {
         showToast(`כוס ${cups}/8`);
+        // Share every 4th cup to groups (not spam every cup)
+        if (cups % 4 === 0) {
+            postGroupActivity('water', { cups });
+        }
     }
 
     return cups;
@@ -404,6 +410,57 @@ const ACHIEVEMENTS = [
         check: function() {
             const chatCount = getData('game_chat_count', 0);
             return chatCount >= 10;
+        }
+    },
+    // Social achievements
+    {
+        id: 'social_first_group',
+        name: 'חברותית',
+        emoji: '👯',
+        description: 'הצטרפת או יצרת קבוצה ראשונה',
+        check: function() {
+            const groups = getData('myGroups', []);
+            return groups.length >= 1;
+        }
+    },
+    {
+        id: 'social_group_creator',
+        name: 'מנהיגה',
+        emoji: '👑',
+        description: 'יצרת קבוצה והזמנת חברות',
+        check: function() {
+            const groups = getData('myGroups', []);
+            return groups.length >= 1;
+        }
+    },
+    {
+        id: 'social_two_groups',
+        name: 'רב-קבוצתית',
+        emoji: '🌐',
+        description: 'חברה ב-2 קבוצות לפחות',
+        check: function() {
+            const groups = getData('myGroups', []);
+            return groups.length >= 2;
+        }
+    },
+    {
+        id: 'social_streak_share',
+        name: 'מלכת הרצף',
+        emoji: '🔗',
+        description: 'רצף של 7 ימים בזמן שאת בקבוצה',
+        check: function() {
+            const groups = getData('myGroups', []);
+            return groups.length >= 1 && getStreak() >= 7;
+        }
+    },
+    {
+        id: 'social_water_champ',
+        name: 'שתיינית חברתית',
+        emoji: '🏊',
+        description: 'השלמת יעד מים כשאת בקבוצה',
+        check: function() {
+            const groups = getData('myGroups', []);
+            return groups.length >= 1 && getWaterToday() >= 8;
         }
     }
 ];

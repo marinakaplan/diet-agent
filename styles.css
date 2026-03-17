@@ -1560,6 +1560,109 @@ body {
     /* inherits from .page */
 }
 
+/* ============ Profile Header Card ============ */
+.profile-header-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    background: var(--surface);
+    border: var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+}
+
+.profile-avatar-large {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--primary-light);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.profile-header-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.profile-header-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 2px;
+}
+
+.profile-header-meta {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* ============ Smart Goals Calculator ============ */
+.profile-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.profile-section-header h3 {
+    margin-bottom: 0;
+}
+
+.btn-smart-calc {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: var(--primary-light);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    border-radius: 20px;
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-smart-calc:active {
+    background: var(--primary);
+    color: white;
+}
+
+.smart-calc-hint {
+    margin-bottom: 14px;
+}
+
+.smart-calc-result {
+    background: var(--primary-light);
+    border: 1px solid rgba(46, 170, 220, 0.3);
+    border-radius: var(--radius);
+    padding: 14px;
+}
+
+.smart-calc-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--primary-dark);
+    margin-bottom: 6px;
+}
+
+.smart-calc-details {
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: var(--text-secondary);
+}
+
+.smart-calc-details strong {
+    color: var(--text);
+    font-weight: 600;
+}
+
 .profile-section {
     background: var(--surface);
     border-radius: var(--radius);
@@ -1588,6 +1691,10 @@ body {
 
 .form-group.full-width {
     grid-column: 1 / -1;
+}
+
+.form-grid .form-group.full-width:last-child:nth-child(odd) {
+    max-width: calc(50% - 6px);
 }
 
 .form-group label {
@@ -2890,7 +2997,333 @@ body {
     flex-shrink: 0;
 }
 
+/* ============ Group Created Popup ============ */
+.group-popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+}
+
+.group-popup {
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 28px 24px;
+    max-width: 360px;
+    width: 100%;
+    text-align: center;
+}
+
+.group-popup-icon {
+    color: var(--primary);
+    margin-bottom: 12px;
+}
+
+.group-popup-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.group-popup-subtitle {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+}
+
+.group-popup-code-box {
+    background: var(--bg-warm);
+    border: var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.group-popup-code-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.group-popup-code {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: 4px;
+    font-family: 'Inter', monospace;
+}
+
+.group-popup-text {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin-bottom: 18px;
+    line-height: 1.5;
+}
+
+.group-popup-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.group-popup-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+    transition: opacity 0.15s;
+}
+
+.group-popup-btn:active {
+    opacity: 0.8;
+}
+
+.group-popup-btn--whatsapp {
+    background: #25D366;
+    color: white;
+}
+
+.group-popup-btn--copy {
+    background: var(--bg);
+    color: var(--text);
+    border: var(--border);
+}
+
+.group-popup-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 4px;
+}
+
+/* ============ Group Tabs ============ */
+.group-tabs {
+    display: flex;
+    gap: 0;
+    border: 1px solid #E3E2DE;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.group-tab {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    background: var(--bg);
+    color: var(--text-secondary);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+    font-family: inherit;
+}
+
+.group-tab + .group-tab {
+    border-right: 1px solid #E3E2DE;
+}
+
+.group-tab--active {
+    background: var(--primary-light);
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.group-tab:active {
+    background: var(--bg-warm);
+}
+
+/* ============ Activity Feed ============ */
+.group-detail-feed {
+    min-height: 100px;
+}
+
+.activity-loading {
+    text-align: center;
+    padding: 24px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.activity-empty {
+    text-align: center;
+    padding: 24px 16px;
+}
+
+.activity-empty-icon {
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.activity-empty-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.activity-empty-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.activity-date-divider {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 8px 0 4px;
+    margin-top: 4px;
+    border-top: 1px solid #F0EFED;
+}
+
+.activity-date-divider:first-child {
+    border-top: none;
+    margin-top: 0;
+}
+
+.activity-item {
+    display: flex;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid #F0EFED;
+    align-items: flex-start;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: var(--bg-warm);
+    color: var(--text-secondary);
+}
+
+.activity-item--meal .activity-icon {
+    background: #FBF3DB;
+    color: #CB912F;
+}
+
+.activity-item--water .activity-icon {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.activity-item--weight .activity-icon {
+    background: #F3F0FF;
+    color: #6940A5;
+}
+
+.activity-item--achievement .activity-icon {
+    background: #FBF3DB;
+    color: #CB912F;
+}
+
+.activity-item--streak .activity-icon {
+    background: #FDEBEB;
+    color: #EB5757;
+}
+
+.activity-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.activity-text {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text);
+}
+
+.activity-text strong {
+    font-weight: 600;
+}
+
+.activity-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2px;
+}
+
+.activity-cal {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--primary);
+    background: var(--primary-light);
+    padding: 1px 6px;
+    border-radius: 4px;
+}
+
+.activity-time {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
 /* ============ Responsive ============ */
+@media (max-width: 480px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .form-group.full-width {
+        grid-column: 1;
+    }
+
+    .profile-section-header {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .profile-header-card {
+        padding: 16px;
+    }
+
+    .profile-header-meta {
+        font-size: 0.75rem;
+    }
+
+    .smart-calc-details {
+        font-size: 0.75rem;
+    }
+
+    .btn-smart-calc {
+        font-size: 0.75rem;
+        padding: 5px 12px;
+    }
+}
+
 @media (max-width: 380px) {
     .rings-container {
         grid-template-columns: repeat(2, 1fr);
