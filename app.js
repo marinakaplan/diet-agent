@@ -3049,7 +3049,7 @@ async function startNewAccount() {
 
     showLoading('יוצרת חשבון...');
     try {
-        const resp = await fetch('/api/user/register', {
+        const resp = await fetch('/api/user?action=register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ displayName: name })
@@ -3099,7 +3099,7 @@ async function loginWithCode() {
 
     showLoading('מתחברת...');
     try {
-        const resp = await fetch('/api/user/login', {
+        const resp = await fetch('/api/user?action=login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ friendCode: code })
@@ -3128,7 +3128,7 @@ async function loginWithCode() {
                 const groupDetails = await Promise.all(
                     data.groups.map(async (gid) => {
                         try {
-                            const resp = await fetch(`/api/group/leaderboard?groupId=${gid}`);
+                            const resp = await fetch(`/api/group?action=leaderboard&groupId=${gid}`);
                             if (!resp.ok) return null;
                             const gData = await resp.json();
                             return { groupId: gid, name: gData.groupName || 'קבוצה', inviteCode: gData.inviteCode || '' };

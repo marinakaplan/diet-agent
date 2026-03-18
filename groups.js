@@ -23,7 +23,7 @@ async function ensureUserIdentity() {
 
     try {
         const profile = getProfile();
-        const resp = await fetch('/api/user/register', {
+        const resp = await fetch('/api/user?action=register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ displayName: profile.name || '' })
@@ -84,7 +84,7 @@ async function syncToCloudWithUser() {
         const profile = getProfile();
 
         // Sync public stats + profile to users table
-        await fetch('/api/user/sync', {
+        await fetch('/api/user?action=sync', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId, publicStats, profile, displayName: profile.name })
@@ -147,7 +147,7 @@ async function submitCreateGroup() {
 
     showLoading('יוצרת קבוצה... ⏳');
     try {
-        const resp = await fetch('/api/group/create', {
+        const resp = await fetch('/api/group?action=create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId, groupName: groupName.trim() })
@@ -248,7 +248,7 @@ async function submitJoinGroup() {
 
     showLoading('מצטרפת לקבוצה... ⏳');
     try {
-        const resp = await fetch('/api/group/join', {
+        const resp = await fetch('/api/group?action=join', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId, inviteCode: inviteCode.trim() })
@@ -284,7 +284,7 @@ async function submitJoinGroup() {
 
 async function loadGroupLeaderboard(groupId) {
     try {
-        const resp = await fetch(`/api/group/leaderboard?groupId=${groupId}`);
+        const resp = await fetch(`/api/group?action=leaderboard&groupId=${groupId}`);
         if (!resp.ok) return null;
         return await resp.json();
     } catch {
@@ -315,7 +315,7 @@ async function postGroupActivity(type, data) {
     const groupIds = groups.map(g => g.groupId);
 
     try {
-        await fetch('/api/group/activity', {
+        await fetch('/api/group?action=activity', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -331,7 +331,7 @@ async function postGroupActivity(type, data) {
 
 async function loadGroupActivities(groupId) {
     try {
-        const resp = await fetch(`/api/group/activity?groupId=${groupId}&limit=30`);
+        const resp = await fetch(`/api/group?action=activity&groupId=${groupId}&limit=30`);
         if (!resp.ok) return [];
         const result = await resp.json();
         return result.activities || [];
@@ -724,7 +724,7 @@ async function doLeaveGroup(groupId) {
     const userId = getUserId();
     if (userId) {
         try {
-            await fetch('/api/group/leave', {
+            await fetch('/api/group?action=leave', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId, groupId })

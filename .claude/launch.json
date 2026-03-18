@@ -1,11 +1,11 @@
 {
-    "version": "0.0.1",
-    "configurations": [
-        {
-            "name": "diet-agent",
-            "runtimeExecutable": "/Users/marinamonto/.nvm/versions/node/v22.22.1/bin/npx",
-            "runtimeArgs": ["serve", "-l", "3456", "--no-clipboard", "-c", "0"],
-            "port": 3456
-        }
-    ]
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "diet-agent",
+      "runtimeExecutable": "/usr/bin/python3",
+      "runtimeArgs": ["-m", "http.server", "3456"],
+      "port": 3456
+    }
+  ]
 }

@@ -1,4 +1,4 @@
-// Direct blob fetch - bypasses the slow list() SDK call
+// Blob read utility using direct fetch with aggressive cache bypass
 // BLOB_READ_WRITE_TOKEN format: vercel_blob_rw_<storeId>_<random>
 
 let _storeUrl = null;
@@ -19,7 +19,14 @@ export async function readBlob(pathname) {
     const storeUrl = getStoreUrl();
     if (!storeUrl) return null;
     try {
-        const resp = await fetch(`${storeUrl}/${pathname}.json`);
+        // Use crypto-random nonce + pragma to bypass CDN caching entirely
+        const nonce = Date.now() + '_' + Math.random().toString(36).slice(2);
+        const resp = await fetch(`${storeUrl}/${pathname}.json?_=${nonce}`, {
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
+            }
+        });
         if (!resp.ok) return null;
         return resp.json();
     } catch (e) {
