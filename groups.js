@@ -970,17 +970,15 @@ function renderGoalCard(goal, myUserId) {
 // ============ Challenge & Goal Actions ============
 function openCreateChallenge(groupId) {
     _activeCreateGroupId = groupId;
-    document.getElementById('input-challenge-title').value = '';
     openModal('create-challenge-modal');
 }
 
 async function submitCreateChallenge() {
     const type = document.getElementById('input-challenge-type').value;
-    const title = document.getElementById('input-challenge-title').value.trim();
+    const typeNames = { water: 'אתגר שתייה', exercise_streak: 'אתגר אימונים', weight_loss: 'אתגר ירידה במשקל', healthy_eating: 'אתגר אכילה בריאה', calories: 'אתגר קלוריות' };
+    const title = typeNames[type] || 'אתגר';
     const duration = parseInt(document.getElementById('input-challenge-duration').value);
     const userId = localStorage.getItem('userId');
-
-    if (!title) { showToast('הכניסי שם לאתגר'); return; }
     if (!_activeCreateGroupId) return;
 
     closeModal('create-challenge-modal');
