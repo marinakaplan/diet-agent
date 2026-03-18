@@ -1,5 +1,4 @@
-import { put } from '@vercel/blob';
-import { readBlob } from '../_utils.js';
+import { getSupabase } from '../_supabase.js';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -8,55 +7,51 @@ export default async function handler(req, res) {
         const { userId, inviteCode } = req.body;
         if (!userId || !inviteCode) return res.status(400).json({ error: 'userId and inviteCode required' });
 
-        // Read invite + user in parallel (direct fetch, no SDK list)
-        const [invite, user] = await Promise.all([
-            readBlob(`invite-${inviteCode}`),
-            readBlob(`users/${userId}`)
-        ]);
+        const db = getSupabase();
 
-        if (!invite) return res.status(404).json({ error: 'קוד לא נמצא' });
+        // Find group by invite code
+        const { data: group, error: gErr } = await db
+            .from('groups')
+            .select('*')
+            .eq('invite_code', inviteCode)
+            .single();
 
-        const group = await readBlob(`groups/${invite.groupId}`);
-        if (!group) return res.status(404).json({ error: 'קבוצה לא נמצאה' });
+        if (gErr || !group) return res.status(404).json({ error: 'קוד לא נמצא' });
 
-        if (group.members.some(m => m.userId === userId)) {
-            return res.status(200).json({ group, message: 'כבר בקבוצה' });
+        const members = group.members || [];
+
+        if (members.some(m => m.userId === userId)) {
+            return res.status(200).json({ group: { ...group, groupId: group.group_id }, message: 'כבר בקבוצה' });
         }
 
-        if (group.members.length >= (group.maxMembers || 20)) {
+        if (members.length >= 20) {
             return res.status(400).json({ error: 'הקבוצה מלאה' });
         }
 
-        let finalUser = user || {
-            userId,
-            displayName: 'משתמשת',
-            groups: [],
-            data: {},
-            publicStats: { xp: 0, level: 1, levelName: 'מתחילה', levelEmoji: '🌱', streak: 0 }
-        };
+        const { data: user } = await db.from('users').select('display_name').eq('user_id', userId).single();
 
-        group.members.push({
+        members.push({
             userId,
-            displayName: finalUser.displayName || 'משתמשת',
+            displayName: user?.display_name || 'משתמשת',
             joinedAt: new Date().toISOString(),
             role: 'member'
         });
 
-        finalUser.groups = finalUser.groups || [];
-        if (!finalUser.groups.includes(invite.groupId)) {
-            finalUser.groups.push(invite.groupId);
-        }
+        const { error } = await db
+            .from('groups')
+            .update({ members })
+            .eq('group_id', group.group_id);
 
-        await Promise.all([
-            put(`groups/${invite.groupId}.json`, JSON.stringify(group), {
-                access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json'
-            }),
-            put(`users/${userId}.json`, JSON.stringify(finalUser), {
-                access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json'
-            })
-        ]);
+        if (error) throw error;
 
-        return res.status(200).json({ group });
+        return res.status(200).json({
+            group: {
+                groupId: group.group_id,
+                name: group.name,
+                inviteCode: group.invite_code,
+                members
+            }
+        });
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }

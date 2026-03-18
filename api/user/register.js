@@ -1,4 +1,4 @@
-import { put } from '@vercel/blob';
+import { getSupabase } from '../_supabase.js';
 
 function generateId() {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -18,26 +18,25 @@ export default async function handler(req, res) {
         const { displayName } = req.body || {};
         const userId = generateId();
         const friendCode = generateFriendCode();
+        const db = getSupabase();
 
         const userData = {
-            userId,
-            friendCode,
-            displayName: displayName || '',
-            createdAt: new Date().toISOString(),
-            groups: [],
-            publicStats: { xp: 0, level: 1, levelName: 'מתחילה', levelEmoji: '🌱', streak: 0, weightLost: 0, lastActive: null },
-            data: {}
+            user_id: userId,
+            friend_code: friendCode,
+            display_name: displayName || '',
+            profile: {},
+            public_stats: { xp: 0, level: 1, levelName: 'מתחילה', levelEmoji: '🌱', streak: 0, weightLost: 0, lastActive: null },
+            created_at: new Date().toISOString()
         };
 
-        // Save user + friend code in parallel
-        await Promise.all([
-            put(`users/${userId}.json`, JSON.stringify(userData), {
-                access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json'
-            }),
-            put(`friendcode-${friendCode}.json`, JSON.stringify({ userId, friendCode }), {
-                access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json'
-            })
-        ]);
+        const { error: userErr } = await db.from('users').insert(userData);
+        if (userErr) throw userErr;
+
+        const { error: codeErr } = await db.from('friend_codes').insert({ friend_code: friendCode, user_id: userId });
+        if (codeErr) throw codeErr;
+
+        // Init gamification row
+        await db.from('gamification').insert({ user_id: userId, xp: 0, streak: 0, achievements: [], xp_log: [] });
 
         return res.status(200).json({ userId, friendCode });
     } catch (error) {

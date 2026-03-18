@@ -1,19 +1,34 @@
-import { put } from '@vercel/blob';
-import { readBlob } from '../_utils.js';
+import { getSupabase } from '../_supabase.js';
 
 export default async function handler(req, res) {
+    const db = getSupabase();
+
     if (req.method === 'GET') {
         try {
             const { groupId, limit: limitStr } = req.query;
             if (!groupId) return res.status(400).json({ error: 'groupId required' });
 
-            const activities = await readBlob(`activities/${groupId}`) || [];
             const limit = parseInt(limitStr) || 50;
 
-            return res.status(200).json({
-                groupId,
-                activities: activities.slice(0, limit)
-            });
+            const { data, error } = await db
+                .from('group_activity')
+                .select('*')
+                .eq('group_id', groupId)
+                .order('created_at', { ascending: false })
+                .limit(limit);
+
+            if (error) throw error;
+
+            const activities = (data || []).map(a => ({
+                id: a.id,
+                userId: a.user_id,
+                displayName: a.display_name,
+                type: a.type,
+                data: a.data,
+                timestamp: a.created_at
+            }));
+
+            return res.status(200).json({ groupId, activities });
         } catch (error) {
             return res.status(500).json({ error: error.message });
         }
@@ -26,41 +41,27 @@ export default async function handler(req, res) {
                 return res.status(400).json({ error: 'userId, groupIds, and activity required' });
             }
 
-            const validTypes = ['meal', 'water', 'weight', 'achievement', 'streak'];
+            const validTypes = ['meal', 'water', 'weight', 'achievement', 'streak', 'exercise'];
             if (!validTypes.includes(activity.type)) {
                 return res.status(400).json({ error: 'Invalid activity type' });
             }
 
-            const user = await readBlob(`users/${userId}`);
-            const displayName = user?.displayName || 'ללא שם';
+            const { data: user } = await db.from('users').select('display_name').eq('user_id', userId).single();
+            const displayName = user?.display_name || 'ללא שם';
 
-            const activityEntry = {
-                id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-                userId,
-                displayName,
-                type: activity.type,
-                data: activity.data || {},
-                timestamp: new Date().toISOString()
-            };
+            // Verify membership and insert activity for each group
+            for (const gid of groupIds) {
+                const { data: group } = await db.from('groups').select('members').eq('group_id', gid).single();
+                if (!group || !(group.members || []).some(m => m.userId === userId)) continue;
 
-            // Read all groups + activities in parallel
-            const groupReads = groupIds.map(gid => Promise.all([
-                readBlob(`groups/${gid}`),
-                readBlob(`activities/${gid}`)
-            ]).then(([group, activities]) => ({ gid, group, activities: activities || [] })));
-
-            const groupData = await Promise.all(groupReads);
-
-            const writes = [];
-            for (const { gid, group, activities } of groupData) {
-                if (!group || !group.members.some(m => m.userId === userId)) continue;
-                activities.unshift(activityEntry);
-                writes.push(put(`activities/${gid}.json`, JSON.stringify(activities.slice(0, 200)), {
-                    access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json'
-                }));
+                await db.from('group_activity').insert({
+                    group_id: gid,
+                    user_id: userId,
+                    display_name: displayName,
+                    type: activity.type,
+                    data: activity.data || {}
+                });
             }
-
-            if (writes.length > 0) await Promise.all(writes);
 
             return res.status(200).json({ success: true });
         } catch (error) {

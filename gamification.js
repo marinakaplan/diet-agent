@@ -16,17 +16,77 @@ const XP_REWARDS = {
 };
 
 const LEVELS = [
-    { level: 1,  name: 'מתחילה',         emoji: '🌱', xpRequired: 0 },
-    { level: 2,  name: 'מתעוררת',        emoji: '🌿', xpRequired: 100 },
-    { level: 3,  name: 'צומחת',          emoji: '🌻', xpRequired: 300 },
-    { level: 4,  name: 'מתקדמת',         emoji: '⭐', xpRequired: 600 },
-    { level: 5,  name: 'מנצנצת',         emoji: '💫', xpRequired: 1000 },
-    { level: 6,  name: 'בוערת',          emoji: '🔥', xpRequired: 1500 },
-    { level: 7,  name: 'יהלום',          emoji: '💎', xpRequired: 2200 },
-    { level: 8,  name: 'מלכת הבריאות',   emoji: '👑', xpRequired: 3000 },
-    { level: 9,  name: 'גיבורת-על',      emoji: '🦸‍♀️', xpRequired: 4000 },
-    { level: 10, name: 'אלופת העולם',    emoji: '🏆', xpRequired: 5500 }
+    { level: 1,  name: 'מתחילה',         emoji: '🌱', xpRequired: 0,    avatar: '🌱', avatarColor: '#4DAB9A' },
+    { level: 2,  name: 'מתעוררת',        emoji: '🌿', xpRequired: 100,  avatar: '🌿', avatarColor: '#529CCA' },
+    { level: 3,  name: 'צומחת',          emoji: '🌻', xpRequired: 300,  avatar: '🌻', avatarColor: '#CB912F' },
+    { level: 4,  name: 'מתקדמת',         emoji: '⭐', xpRequired: 600,  avatar: '⭐', avatarColor: '#6940A5' },
+    { level: 5,  name: 'מנצנצת',         emoji: '💫', xpRequired: 1000, avatar: '💫', avatarColor: '#069494' },
+    { level: 6,  name: 'בוערת',          emoji: '🔥', xpRequired: 1500, avatar: '🔥', avatarColor: '#EB5757' },
+    { level: 7,  name: 'יהלום',          emoji: '💎', xpRequired: 2200, avatar: '💎', avatarColor: '#529CCA' },
+    { level: 8,  name: 'מלכת הבריאות',   emoji: '👑', xpRequired: 3000, avatar: '👑', avatarColor: '#CB912F' },
+    { level: 9,  name: 'גיבורת-על',      emoji: '🦸‍♀️', xpRequired: 4000, avatar: '🦸‍♀️', avatarColor: '#6940A5' },
+    { level: 10, name: 'אלופת העולם',    emoji: '🏆', xpRequired: 5500, avatar: '🏆', avatarColor: '#FFD700' }
 ];
+
+// ============ Tips Library ============
+
+const TIP_CATEGORY_COLORS = {
+    nutrition: '#4DAB9A',
+    hydration: '#069494',
+    exercise: '#6940A5',
+    wellness: '#CB912F',
+    planning: '#529CCA',
+    mindset: '#EB5757'
+};
+
+const TIPS_LIBRARY = [
+    { id: 't1',  text: 'שתי כוס מים לפני כל ארוחה - זה ממלא את הבטן ומפחית אכילת יתר', minLevel: 1, category: 'hydration' },
+    { id: 't2',  text: 'חלבון בכל ארוחה עוזר לשמור על שובע לאורך זמן', minLevel: 1, category: 'nutrition' },
+    { id: 't3',  text: 'תכנון ארוחות מראש מקטין את הסיכוי לחטיפים לא מתוכננים', minLevel: 1, category: 'planning' },
+    { id: 't4',  text: 'ירקות צבעוניים מספקים מגוון ויטמינים ומינרלים - נסי להוסיף צבעים לכל ארוחה', minLevel: 1, category: 'nutrition' },
+    { id: 't5',  text: 'הליכה של 10 דקות אחרי ארוחה עוזרת לאזן רמות סוכר', minLevel: 2, category: 'exercise' },
+    { id: 't6',  text: 'שינה טובה של 7-8 שעות חיונית לירידה במשקל ולוויסות תיאבון', minLevel: 2, category: 'wellness' },
+    { id: 't7',  text: 'אגוזים הם חטיף מצוין - 10 שקדים = כ-70 קלוריות ושובע ל-2 שעות', minLevel: 2, category: 'nutrition' },
+    { id: 't8',  text: 'הימנעי מלאכול מול מסך - אכילה מודעת עוזרת לזהות שובע', minLevel: 2, category: 'mindset' },
+    { id: 't9',  text: 'שעועית, עדשים וחומוס הם מקור מעולה לחלבון צמחי וסיבים', minLevel: 3, category: 'nutrition' },
+    { id: 't10', text: 'מדדי את המנות בכפות ולא "בעין" - זה עושה הבדל של מאות קלוריות', minLevel: 3, category: 'planning' },
+    { id: 't11', text: 'תרגילי כוח מגדילים מסת שריר, שמעלה את המטבוליזם גם במנוחה', minLevel: 3, category: 'exercise' },
+    { id: 't12', text: 'ביצים הן אחד המזונות המשביעים ביותר - מעולה לארוחת בוקר', minLevel: 3, category: 'nutrition' },
+    { id: 't13', text: 'לחץ מעלה קורטיזול שגורם לאגירת שומן - מצאי דרכים להירגע', minLevel: 4, category: 'wellness' },
+    { id: 't14', text: 'חלבון מי גבינה (whey) אחרי אימון עוזר לשיקום שרירים', minLevel: 4, category: 'exercise' },
+    { id: 't15', text: 'דגים שמנים (סלמון, טונה) עשירים באומגה 3 שטובה ללב ולמוח', minLevel: 4, category: 'nutrition' },
+    { id: 't16', text: 'החליפי אורז לבן בקינואה או בורגול - יותר חלבון וסיבים', minLevel: 4, category: 'nutrition' },
+    { id: 't17', text: 'צום לסירוגין (16:8) עוזר לחלק - אבל לא מתאים לכולם', minLevel: 5, category: 'planning' },
+    { id: 't18', text: 'מעקב אחרי סיבים תזונתיים חשוב כמו מעקב קלוריות', minLevel: 5, category: 'nutrition' },
+    { id: 't19', text: 'אבוקדו עשיר בשומנים בריאים שעוזרים לספיגת ויטמינים', minLevel: 5, category: 'nutrition' },
+    { id: 't20', text: 'שתי תה ירוק - מכיל נוגדי חמצון ומעלה מעט את המטבוליזם', minLevel: 5, category: 'wellness' },
+    { id: 't21', text: 'תוספי מגנזיום יכולים לעזור לשינה ולשרירים - שאלי רופא', minLevel: 6, category: 'wellness' },
+    { id: 't22', text: 'NEAT - תנועה לא ספורטיבית (מדרגות, עמידה, סידור) שורפת 300+ קלוריות ביום', minLevel: 6, category: 'exercise' },
+    { id: 't23', text: 'עדיפות לפחמימות מורכבות (שיבולת שועל, בטטה) על פני פשוטות (סוכר, לחם לבן)', minLevel: 6, category: 'nutrition' },
+    { id: 't24', text: 'אל תדלגי על ארוחות - זה מאט את המטבוליזם ומגביר אכילת יתר', minLevel: 7, category: 'planning' },
+    { id: 't25', text: 'ויטמין D חיוני לבריאות העצמות ולחיסון - בדקי את הרמות שלך', minLevel: 7, category: 'wellness' },
+    { id: 't26', text: 'פרה-ביוטיקה (שום, בצל, בננה) מזינה את חיידקי המעי הטובים', minLevel: 7, category: 'nutrition' },
+    { id: 't27', text: 'אימון HIIT של 20 דקות יכול להיות יעיל כמו ריצה של 45 דקות', minLevel: 8, category: 'exercise' },
+    { id: 't28', text: 'תעדי גם את הרגשות סביב אכילה - זה עוזר לזהות דפוסים', minLevel: 8, category: 'mindset' },
+    { id: 't29', text: 'Carb cycling - ימי פחמימות גבוהים/נמוכים לפי עצימות האימון', minLevel: 9, category: 'planning' },
+    { id: 't30', text: 'את כבר מומחית! עזרי לאחרות בקבוצה שלך - ללמד זה הדרך הכי טובה ללמוד', minLevel: 10, category: 'mindset' }
+];
+
+function getDailyTip() {
+    const stats = getGameStats();
+    const available = TIPS_LIBRARY.filter(t => t.minLevel <= stats.level);
+    if (available.length === 0) return null;
+    const today = getTodayKey();
+    const seed = today.split('-').join('');
+    const hash = _simpleHash(seed + 'tip');
+    const idx = hash % available.length;
+    return available[idx];
+}
+
+function getLevelAvatar(level) {
+    const idx = Math.max(0, Math.min(level - 1, LEVELS.length - 1));
+    return LEVELS[idx];
+}
 
 function getGameStats() {
     const xp = getData('game_xp', 0);
@@ -180,18 +240,51 @@ function markTodayActive() {
 
 // ============ Water Tracking ============
 
+function _playWaterSound() {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        // Water bubble/drop sound
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        // Descending pitch for water drop effect
+        osc.frequency.setValueAtTime(600, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.2);
+        // Second bubble
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(800, ctx.currentTime + 0.1);
+        osc2.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.25);
+        gain2.gain.setValueAtTime(0.2, ctx.currentTime + 0.1);
+        gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        osc2.start(ctx.currentTime + 0.1);
+        osc2.stop(ctx.currentTime + 0.3);
+        setTimeout(() => ctx.close(), 500);
+    } catch (e) { /* silence errors on unsupported browsers */ }
+}
+
 function addWaterCup() {
     const today = getTodayKey();
     const key = 'water_' + today;
     let cups = getData(key, 0);
 
-    if (cups >= 12) {
-        showToast('הגעת למקסימום 12 כוסות היום!');
+    if (cups >= 20) {
+        showToast('וואו, 20 כוסות! שתית מספיק להיום 💧');
         return cups;
     }
 
     cups += 1;
     setData(key, cups);
+    _playWaterSound();
 
     if (cups === 8) {
         addXP(XP_REWARDS.water_complete, 'water_complete');
@@ -207,6 +300,17 @@ function addWaterCup() {
         }
     }
 
+    return cups;
+}
+
+function removeWaterCup() {
+    const today = getTodayKey();
+    const key = 'water_' + today;
+    let cups = getData(key, 0);
+    if (cups <= 0) return 0;
+    cups -= 1;
+    setData(key, cups);
+    showToast(`כוס הוסרה (${cups}/8)`);
     return cups;
 }
 
@@ -646,7 +750,7 @@ function launchConfetti() {
     const container = document.createElement('div');
     container.className = 'confetti-container';
 
-    const colors = ['#2EAADC', '#6940A5', '#CB912F', '#EB5757', '#4DAB9A', '#529CCA'];
+    const colors = ['#069494', '#6940A5', '#CB912F', '#EB5757', '#4DAB9A', '#529CCA'];
 
     for (let i = 0; i < 50; i++) {
         const piece = document.createElement('div');
@@ -790,16 +894,31 @@ function renderGameHeader() {
     `;
 }
 
+function _getWaterEncouragement(cups, target) {
+    if (cups === 0) return '';
+    if (cups < target / 2) return 'המשיכי ככה!';
+    if (cups < target) return 'כמעט שם!';
+    if (cups === target) return 'הגעת ליעד!';
+    if (cups <= 12) return 'מעבר ליעד, כל הכבוד!';
+    return 'אלופה של שתייה!';
+}
+
 function renderWaterTracker() {
     const cups = getWaterToday();
     const target = getWaterTarget();
+    const maxDisplay = Math.max(target, cups);
 
     let cupsHTML = '';
-    for (let i = 1; i <= target; i++) {
+    for (let i = 1; i <= maxDisplay; i++) {
         const filled = i <= cups;
         const dropClass = filled ? 'water-drop water-drop--filled' : 'water-drop water-drop--empty';
-        cupsHTML += `<span class="${dropClass}">${icon('droplet', 16)}</span>`;
+        cupsHTML += `<span class="${dropClass}">${icon('droplet', 18)}</span>`;
     }
+
+    const ml = cups * 250;
+    const litersVal = ml / 1000;
+    const litersDisplay = ml < 1000 ? `${ml} מ״ל` : `${parseFloat(litersVal.toFixed(2))} ליטר`;
+    const encouragement = _getWaterEncouragement(cups, target);
 
     return `
         <div class="water-tracker-card">
@@ -810,9 +929,16 @@ function renderWaterTracker() {
             <div class="water-drops-container">
                 ${cupsHTML}
             </div>
-            <button class="water-add-btn" onclick="addWaterCup(); _refreshWaterUI();">
-                + הוסיפי כוס מים
-            </button>
+            <div class="water-liters">שתית <strong>${litersDisplay}</strong> היום</div>
+            ${encouragement ? `<div class="water-encouragement">${encouragement}</div>` : ''}
+            <div style="display:flex;gap:8px;justify-content:center">
+                <button class="water-add-btn" onclick="addWaterCup(); _refreshWaterUI();">
+                    + הוסיפי כוס מים
+                </button>
+                ${cups > 0 ? `<button class="water-add-btn" onclick="removeWaterCup(); _refreshWaterUI();" style="background:var(--bg-warm);color:var(--text-secondary);border:1px solid var(--border)">
+                    - הורידי כוס
+                </button>` : ''}
+            </div>
         </div>
     `;
 }
@@ -899,6 +1025,76 @@ function renderAchievementsGrid() {
             <div class="achievements-grid">
                 ${gridHTML}
             </div>
+        </div>
+    `;
+}
+
+// ============ Daily Tip Card ============
+
+function renderDailyTip() {
+    const tip = getDailyTip();
+    if (!tip) return '';
+
+    const categoryColor = TIP_CATEGORY_COLORS[tip.category] || '#069494';
+    const categoryLabels = {
+        nutrition: 'תזונה',
+        hydration: 'שתייה',
+        exercise: 'תנועה',
+        wellness: 'בריאות',
+        planning: 'תכנון',
+        mindset: 'מיינדסט'
+    };
+    const categoryLabel = categoryLabels[tip.category] || '';
+
+    return `
+        <div class="daily-tip-card" style="border-inline-start: 3px solid ${categoryColor};">
+            <div class="daily-tip-header">
+                <span class="daily-tip-icon">${icon('lightbulb', 18)}</span>
+                <span class="daily-tip-title">טיפ יומי</span>
+                <span class="daily-tip-level" style="background: ${categoryColor}15; color: ${categoryColor};">${categoryLabel}</span>
+            </div>
+            <div class="daily-tip-text">${tip.text}</div>
+            <div class="daily-tip-meta">
+                <span class="daily-tip-min-level">רמה ${tip.minLevel}+</span>
+            </div>
+        </div>
+    `;
+}
+
+// ============ Badge Collection ============
+
+function renderBadgeCollection() {
+    const all = getAllAchievements();
+
+    let gridHTML = '';
+    for (const a of all) {
+        const locked = !a.unlocked;
+        const itemClass = locked ? 'badge-item badge-item--locked' : 'badge-item badge-item--unlocked';
+
+        gridHTML += `
+            <div class="${itemClass}">
+                <div class="badge-item-emoji">${a.emoji}</div>
+                <div class="badge-item-name">${a.name}</div>
+                <div class="badge-item-desc">${a.description}</div>
+            </div>
+        `;
+    }
+
+    return `
+        <div class="badge-collection-grid">
+            ${gridHTML}
+        </div>
+    `;
+}
+
+// ============ Profile Avatar ============
+
+function renderProfileAvatar() {
+    const stats = getGameStats();
+    const levelData = getLevelAvatar(stats.level);
+    return `
+        <div class="profile-avatar-evolving" style="background: ${levelData.avatarColor}15; border-color: ${levelData.avatarColor};">
+            <span class="profile-avatar-emoji">${levelData.avatar}</span>
         </div>
     `;
 }

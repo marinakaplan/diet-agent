@@ -77,34 +77,27 @@ function computePublicStats() {
 // ============ Enhanced Cloud Sync ============
 async function syncToCloudWithUser() {
     const userId = getUserId();
-    if (!userId) {
-        // Fallback to old sync
-        return syncToCloud();
-    }
+    if (!userId) return syncToCloud();
 
     try {
-        const data = {};
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key.startsWith('da_')) {
-                data[key] = localStorage.getItem(key);
-            }
-        }
-
         const publicStats = computePublicStats();
+        const profile = getProfile();
 
-        const response = await fetch('/api/user/sync', {
+        // Sync public stats + profile to users table
+        await fetch('/api/user/sync', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, data, publicStats })
+            body: JSON.stringify({ userId, publicStats, profile, displayName: profile.name })
         });
 
-        if (response.ok) {
-            console.log('☁️ סונכרן לענן (משתמש)');
-        }
+        // Full data sync via save endpoint
+        await syncToCloud();
+
+        console.log('☁️ סונכרן לענן (משתמש)');
+        localStorage.setItem('da__lastSyncTime', JSON.stringify(Date.now()));
+        if (typeof updateSyncStatus === 'function') updateSyncStatus();
     } catch (err) {
         console.log('⚠️ סנכרון נכשל:', err.message);
-        // Fallback to old sync
         syncToCloud();
     }
 }
@@ -114,27 +107,10 @@ async function loadFromCloudWithUser() {
     if (!userId) return loadFromCloud();
 
     try {
-        const response = await fetch(`/api/user/loaduser?userId=${userId}`);
-        if (!response.ok) return false;
-        const result = await response.json();
-        if (!result.data) return false;
-
-        const cloudKeys = Object.keys(result.data);
-        const localKeys = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            if (localStorage.key(i).startsWith('da_')) localKeys.push(localStorage.key(i));
-        }
-
-        if (cloudKeys.length > 0 && (localKeys.length <= 2 || cloudKeys.length > localKeys.length)) {
-            cloudKeys.forEach(key => localStorage.setItem(key, result.data[key]));
-            // Restore groups info
-            if (result.friendCode) setData('friendCode', result.friendCode);
-            console.log('☁️ נתונים נטענו מהענן (משתמש)');
-            return true;
-        }
-        return false;
+        // Use the unified load endpoint
+        return await loadFromCloud();
     } catch {
-        return loadFromCloud();
+        return false;
     }
 }
 
@@ -388,6 +364,7 @@ function getActivityIcon(type) {
         case 'weight': return icon('scale', 16);
         case 'achievement': return icon('trophy', 16);
         case 'streak': return icon('flame', 16);
+        case 'exercise': return icon('heart', 16);
         default: return icon('star', 16);
     }
 }
@@ -412,6 +389,8 @@ function getActivityText(activity) {
             return `<strong>${name}</strong> השיגה הישג: ${activity.data.name || ''}`;
         case 'streak':
             return `<strong>${name}</strong> ברצף של ${activity.data.days} ימים!`;
+        case 'exercise':
+            return `<strong>${name}</strong> התאמנה: ${activity.data.name || 'אימון'}${activity.data.duration ? ' (' + activity.data.duration + ' דק׳)' : ''}`;
         default:
             return `<strong>${name}</strong> עדכנה נתונים`;
     }
@@ -513,14 +492,11 @@ function refreshGroupsPage() {
     if (groups.length === 0) {
         html += `
             <div class="groups-empty">
-                <div class="groups-empty-icon">${icon('users', 40)}</div>
-                <div class="groups-empty-title">עדיין אין קבוצות</div>
-                <div class="groups-empty-text">צרי קבוצה חדשה והזמיני חברות,<br>או הצטרפי לקבוצה עם קוד הזמנה</div>
-                <div class="groups-empty-steps">
-                    <div class="groups-step"><span class="groups-step-num">1</span> צרי קבוצה או קבלי קוד מחברה</div>
-                    <div class="groups-step"><span class="groups-step-num">2</span> שתפי את הקוד עם החברות</div>
-                    <div class="groups-step"><span class="groups-step-num">3</span> עקבו אחת אחרי השנייה וצברו XP!</div>
-                </div>
+                <div class="groups-empty-emoji">👯‍♀️</div>
+                <div class="groups-empty-title">יותר כיף ביחד!</div>
+                <div class="groups-empty-text">הצטרפי לקבוצה של חברות<br>או צרי אחת חדשה</div>
+                <button class="groups-empty-join-btn" onclick="joinGroup()">יש לי קוד הצטרפות</button>
+                <button class="groups-empty-create-btn" onclick="createGroup()">צרי קבוצה חדשה</button>
             </div>
         `;
     } else {

@@ -1,5 +1,4 @@
-import { put } from '@vercel/blob';
-import { readBlob } from '../_utils.js';
+import { getSupabase } from '../_supabase.js';
 
 function generateGroupId() {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -19,45 +18,25 @@ export default async function handler(req, res) {
         const { userId, groupName } = req.body;
         if (!userId || !groupName) return res.status(400).json({ error: 'userId and groupName required' });
 
-        let user = await readBlob(`users/${userId}`);
-        if (!user) {
-            user = {
-                userId,
-                displayName: groupName.split(' ')[0] || 'משתמשת',
-                groups: [],
-                data: {},
-                publicStats: {}
-            };
-        }
+        const db = getSupabase();
+
+        const { data: user } = await db.from('users').select('display_name').eq('user_id', userId).single();
+        const displayName = user?.display_name || 'ללא שם';
 
         const groupId = generateGroupId();
         const inviteCode = generateInviteCode();
 
-        const group = {
-            groupId,
+        const members = [{ userId, displayName, joinedAt: new Date().toISOString(), role: 'admin' }];
+
+        const { error } = await db.from('groups').insert({
+            group_id: groupId,
             name: groupName,
-            inviteCode,
-            createdBy: userId,
-            createdAt: new Date().toISOString(),
-            members: [{ userId, displayName: user.displayName || 'ללא שם', joinedAt: new Date().toISOString(), role: 'admin' }],
-            maxMembers: 20
-        };
+            invite_code: inviteCode,
+            created_by: userId,
+            members
+        });
 
-        user.groups = user.groups || [];
-        user.groups.push(groupId);
-
-        // Save everything in parallel
-        await Promise.all([
-            put(`groups/${groupId}.json`, JSON.stringify(group), {
-                access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json'
-            }),
-            put(`invite-${inviteCode}.json`, JSON.stringify({ groupId, inviteCode }), {
-                access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json'
-            }),
-            put(`users/${userId}.json`, JSON.stringify(user), {
-                access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json'
-            })
-        ]);
+        if (error) throw error;
 
         return res.status(200).json({ groupId, inviteCode, name: groupName });
     } catch (error) {

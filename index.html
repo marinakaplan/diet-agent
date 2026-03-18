@@ -12,27 +12,30 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
-    <link rel="stylesheet" href="styles.css?v=14">
+    <link rel="stylesheet" href="styles.css?v=31">
 </head>
 <body>
     <!-- Welcome / Login Screen -->
     <div id="welcome-screen" class="welcome-screen" style="display:none">
         <div class="welcome-content">
-            <div class="welcome-logo" id="welcome-lottie"></div>
+            <!-- Welcome Emoji -->
+            <div class="welcome-emoji">🍊</div>
+
             <h1 class="welcome-title">שיפטי</h1>
             <p class="welcome-subtitle">הדיאטנית החכמה שלך</p>
 
-            <div class="welcome-options">
+            <!-- Register - shown by default -->
+            <div id="welcome-main" class="welcome-main">
+                <div class="register-field">
+                    <input type="text" id="register-name" class="register-input" placeholder="איך קוראים לך?" autocomplete="given-name">
+                </div>
                 <button class="welcome-btn welcome-btn--primary" onclick="startNewAccount()">
-                    בואי נתחיל!
-                    <span class="welcome-btn-sub">חשבון חדש</span>
+                    בואי נתחיל! 💪
                 </button>
-                <button class="welcome-btn welcome-btn--secondary" onclick="showLoginForm()">
-                    יש לי כבר קוד
-                    <span class="welcome-btn-sub">התחברי עם קוד SHFT</span>
-                </button>
+                <div class="welcome-login-link" onclick="showLoginForm()">יש לי כבר קוד SHFT</div>
             </div>
 
+            <!-- Login form -->
             <div id="login-form" class="login-form" style="display:none">
                 <input type="text" id="login-code-input" class="login-input" placeholder="הכניסי קוד SHFT-XXXX" dir="ltr" autocomplete="off" maxlength="9">
                 <button class="login-submit-btn" onclick="loginWithCode()">התחברי</button>
@@ -73,6 +76,9 @@
                     <h2 id="greeting-text">בוקר טוב</h2>
                     <p class="subtitle" id="date-display"></p>
                 </div>
+
+                <!-- Day Selector Bar -->
+                <div class="day-selector-bar" id="day-selector-bar"></div>
 
                 <!-- Gamification Header (Level + XP + Streak) -->
                 <div id="game-header-container"></div>
@@ -147,11 +153,17 @@
                     <div class="weight-target" id="weight-target-display"></div>
                 </div>
 
+                <!-- Net Calories Display -->
+                <div id="net-calories-container"></div>
+
                 <!-- Water Tracker -->
                 <div id="water-tracker-container"></div>
 
                 <!-- Daily Challenges -->
                 <div id="daily-challenges-container"></div>
+
+                <!-- Weekly Smart Dashboard -->
+                <div id="weekly-dashboard-container"></div>
 
                 <!-- AI Insight -->
                 <div class="info-card ai-insight-card">
@@ -173,6 +185,14 @@
 
             <!-- ==================== FOOD LOG ==================== -->
             <section id="page-food" class="page">
+                <div class="food-sticky-top">
+                <div class="plan-my-day-section">
+                    <button class="btn-plan-day" onclick="planMyDay()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                        תכנני לי את היום
+                    </button>
+                </div>
+                <div id="day-plan-container" style="display:none"></div>
                 <div class="food-input-area">
                     <div class="food-input-wrapper">
                         <textarea id="food-input" placeholder="מה אכלת? תארי בחופשיות...&#10;לדוגמה: סלט עם טונה, 2 פרוסות לחם מלא וכוס תה" rows="3"></textarea>
@@ -198,13 +218,9 @@
                         <input type="file" id="food-gallery-input" accept="image/*" onchange="handleFoodPhoto(this)" style="display:none">
                     </div>
                     <!-- Meal type selector -->
-                    <div class="meal-type-selector">
-                        <button class="meal-type active" data-meal="breakfast" onclick="selectMealType(this)">ארוחת בוקר</button>
-                        <button class="meal-type" data-meal="lunch" onclick="selectMealType(this)">צהריים</button>
-                        <button class="meal-type" data-meal="dinner" onclick="selectMealType(this)">ערב</button>
-                        <button class="meal-type" data-meal="snack" onclick="selectMealType(this)">חטיף</button>
-                    </div>
+                    <div class="meal-type-selector" id="meal-type-selector"></div>
                 </div>
+                </div><!-- /food-sticky-top -->
 
                 <!-- AI Analysis Result -->
                 <div id="food-analysis-result" class="food-analysis hidden">
@@ -221,6 +237,14 @@
                     <div id="analysis-detected" class="analysis-detected"></div>
                     <div class="analysis-grid" id="analysis-grid"></div>
                     <div class="analysis-notes" id="analysis-notes"></div>
+                </div>
+
+                <!-- Favorites Section -->
+                <div id="favorites-section" class="favorites-section hidden">
+                    <div class="section-header">
+                        <h3>מועדפים</h3>
+                    </div>
+                    <div class="favorites-list"></div>
                 </div>
 
                 <!-- Food Log List -->
@@ -246,6 +270,18 @@
                     </div>
                 </div>
 
+                <!-- Exercise Log -->
+                <div class="exercise-section info-card">
+                    <div class="section-header">
+                        <h3>פעילות גופנית</h3>
+                    </div>
+                    <div id="exercise-log-list" class="exercise-log-list">
+                        <div class="empty-state"><p>עדיין לא הוספת פעילות היום</p></div>
+                    </div>
+                    <div id="exercise-summary" class="exercise-summary" style="display:none"></div>
+                    <button class="exercise-add-btn" onclick="openModal('exercise-modal')">+ הוסיפי פעילות</button>
+                </div>
+
                 <!-- Photo Gallery -->
                 <div class="food-gallery-section">
                     <div class="section-header">
@@ -257,6 +293,25 @@
 
             <!-- ==================== METRICS ==================== -->
             <section id="page-metrics" class="page">
+                <!-- Time Range Filter Tabs -->
+                <div class="metrics-range-tabs" id="metrics-range-tabs">
+                    <button class="range-tab active" onclick="changeMetricsRange('7d')">7 ימים</button>
+                    <button class="range-tab" onclick="changeMetricsRange('30d')">30 ימים</button>
+                    <button class="range-tab" onclick="changeMetricsRange('3m')">3 חודשים</button>
+                    <button class="range-tab" onclick="changeMetricsRange('all')">כל הזמן</button>
+                </div>
+
+                <!-- Calorie Breakdown Chart Section -->
+                <div class="metrics-section">
+                    <div class="section-header">
+                        <h3>צריכת קלוריות</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="calorie-chart"></canvas>
+                    </div>
+                    <div class="avg-calories-display" id="avg-calories-display"></div>
+                </div>
+
                 <!-- Weight Section -->
                 <div class="metrics-section">
                     <div class="section-header">
@@ -266,6 +321,7 @@
                     <div class="chart-container">
                         <canvas id="weight-chart"></canvas>
                     </div>
+                    <div id="weight-history-list" class="history-list"></div>
                 </div>
 
                 <!-- Measurements Section -->
@@ -295,6 +351,23 @@
                             <span class="m-value" id="m-bmi">--</span>
                             <span class="m-unit"></span>
                         </div>
+                    </div>
+                    <div id="measurements-history-list" class="history-list"></div>
+                </div>
+
+                <!-- Progress Photos Section -->
+                <div class="metrics-section">
+                    <div class="section-header">
+                        <h3>תמונות התקדמות</h3>
+                        <button class="btn-add-small" onclick="addProgressPhoto()">+ הוסיפי</button>
+                    </div>
+                    <div id="progress-monthly-prompt" class="progress-prompt" style="display:none">
+                        <p>📸 הגיע הזמן לתמונת התקדמות חודשית!</p>
+                        <button class="btn-secondary" onclick="addProgressPhoto()">צלמי עכשיו</button>
+                    </div>
+                    <div id="progress-gallery" class="progress-gallery-grid"></div>
+                    <div id="progress-compare-section" style="display:none">
+                        <button class="btn-secondary" onclick="startBeforeAfterCompare()">📊 השוואה לפני/אחרי</button>
                     </div>
                 </div>
 
@@ -348,6 +421,8 @@
                             <div class="b-status" id="bs-tsh"></div>
                         </div>
                     </div>
+                    <div id="blood-history-list" class="history-list"></div>
+                    <div id="blood-ai-insight" class="blood-ai-insight-card" style="display:none"></div>
                     <div class="chart-container" style="margin-top:16px">
                         <canvas id="blood-chart"></canvas>
                     </div>
@@ -393,6 +468,21 @@
                         <div class="profile-header-name" id="profile-display-name">הפרופיל שלי</div>
                         <div class="profile-header-meta" id="profile-display-meta"></div>
                     </div>
+                </div>
+
+                <!-- Account & Recovery -->
+                <div class="profile-section" id="profile-account-section">
+                    <div class="account-sync-row">
+                        <div class="account-sync-info">
+                            <div class="account-sync-label">קוד שחזור</div>
+                            <div class="account-sync-code" id="profile-friend-code">---</div>
+                        </div>
+                        <button class="account-copy-btn" onclick="copyFriendCode()" title="העתיקי">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        </button>
+                    </div>
+                    <div class="account-sync-hint">שמרי את הקוד - תצטרכי אותו להתחבר ממכשיר אחר</div>
+                    <div class="account-sync-status" id="profile-sync-status"></div>
                 </div>
 
                 <!-- Personal Details -->
@@ -565,6 +655,17 @@
                     <button class="modal-close" onclick="closeModal('blood-modal')">✕</button>
                 </div>
                 <div class="modal-body">
+                    <!-- Upload section -->
+                    <div class="blood-upload-section">
+                        <button class="blood-upload-btn" onclick="document.getElementById('blood-file-input').click()">
+                            <span class="blood-upload-icon" id="blood-upload-icon"></span>
+                            <span>העלי תמונה של בדיקת דם</span>
+                            <span class="blood-upload-sub">צלמי או בחרי מהגלריה - ה-AI ימלא את הערכים</span>
+                        </button>
+                        <input type="file" id="blood-file-input" accept="image/*" onchange="handleBloodFileUpload(this)" style="display:none">
+                        <div id="blood-upload-status" class="blood-upload-status hidden"></div>
+                    </div>
+                    <div class="blood-divider"><span>או הזיני ידנית</span></div>
                     <div class="form-group">
                         <label>סוכר (mg/dL)</label>
                         <input type="number" id="input-glucose" placeholder="90">
@@ -604,6 +705,31 @@
             </div>
         </div>
 
+        <!-- Exercise Modal -->
+        <div class="modal-overlay" id="exercise-modal" onclick="closeModalOverlay(event)">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3>הוספת פעילות</h3>
+                    <button class="modal-close" onclick="closeModal('exercise-modal')">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="exercise-type-grid" id="exercise-type-grid"></div>
+                    <div class="form-group">
+                        <label>משך (דקות)</label>
+                        <input type="number" id="input-exercise-duration" placeholder="30" min="1" max="300" oninput="updateBurnPreview()">
+                    </div>
+                    <div class="exercise-burn-preview" id="exercise-burn-preview" style="display:none">
+                        <span>שריפת קלוריות משוערת:</span>
+                        <strong id="exercise-burn-value">0</strong>
+                        <span>קק״ל</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-primary" onclick="saveExercise()">שמרי פעילות</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Create Group Modal -->
         <div class="modal-overlay" id="create-group-modal" onclick="closeModalOverlay(event)">
             <div class="modal">
@@ -639,6 +765,31 @@
                 </div>
                 <div class="modal-footer">
                     <button class="btn-primary" onclick="submitJoinGroup()">הצטרפי</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden progress photo input -->
+        <input type="file" id="progress-photo-input" accept="image/*" capture="user" onchange="handleProgressPhoto(this)" style="display:none">
+
+        <!-- Before/After Compare Modal -->
+        <div class="modal-overlay" id="compare-modal" onclick="closeModalOverlay(event)">
+            <div class="modal" style="max-width:95vw">
+                <div class="modal-header">
+                    <h3>לפני / אחרי</h3>
+                    <button class="modal-close" onclick="closeModal('compare-modal')">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div id="compare-select-ui">
+                        <p style="margin-bottom:12px;color:var(--text-secondary)">בחרי שתי תמונות להשוואה:</p>
+                        <div id="compare-photo-picker" class="progress-gallery-grid"></div>
+                        <button class="btn-primary" id="compare-go-btn" onclick="executeCompare()" style="margin-top:12px;width:100%;display:none">השוואה</button>
+                    </div>
+                    <div id="compare-result" style="display:none">
+                        <div id="compare-container" class="compare-container"></div>
+                        <div class="compare-dates" id="compare-dates"></div>
+                        <button class="btn-secondary" onclick="resetCompare()" style="margin-top:8px;width:100%">בחרי תמונות אחרות</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -694,10 +845,10 @@
     <!-- Toast -->
     <div id="toast" class="toast hidden"></div>
 
-    <script src="icons.js?v=14"></script>
-    <script src="ai-agent.js?v=14"></script>
-    <script src="gamification.js?v=14"></script>
-    <script src="groups.js?v=14"></script>
-    <script src="app.js?v=14"></script>
+    <script src="icons.js?v=31"></script>
+    <script src="ai-agent.js?v=31"></script>
+    <script src="gamification.js?v=31"></script>
+    <script src="groups.js?v=31"></script>
+    <script src="app.js?v=31"></script>
 </body>
 </html>
