@@ -5099,3 +5099,107 @@ body {
     background: var(--primary-light);
     color: var(--primary);
 }
+
+/* ============ Challenges & Goals ============ */
+.challenges-section { margin-bottom: 16px; }
+.challenges-section-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+}
+.challenges-section-title {
+    font-size: 14px; font-weight: 600; color: var(--text-primary);
+    display: flex; align-items: center; gap: 6px;
+}
+.challenge-create-btn {
+    font-size: 12px; padding: 6px 12px; border-radius: 6px;
+    background: var(--primary); color: white; border: none;
+    font-weight: 600; font-family: inherit; cursor: pointer;
+    display: flex; align-items: center; gap: 4px;
+}
+.challenge-card {
+    background: var(--bg); border: 1px solid #E3E2DE; border-radius: 10px;
+    padding: 14px; margin-bottom: 10px; position: relative; overflow: hidden;
+}
+.challenge-card--completed { opacity: 0.85; border-color: #4DAB9A; }
+.challenge-card-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.challenge-card-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+}
+.challenge-card-info { flex: 1; min-width: 0; }
+.challenge-card-title {
+    font-size: 14px; font-weight: 600; color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.challenge-card-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.challenge-countdown {
+    font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 10px;
+    background: #FBF3DB; color: #CB912F; white-space: nowrap;
+}
+.challenge-countdown--ended { background: #E8F5E9; color: #4DAB9A; }
+.challenge-participants { margin-top: 8px; }
+.challenge-participant {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+}
+.challenge-participant-rank {
+    font-size: 11px; font-weight: 700; color: var(--text-muted);
+    min-width: 18px; text-align: center;
+}
+.challenge-participant-name {
+    font-size: 12px; font-weight: 500; color: var(--text-secondary);
+    min-width: 55px; max-width: 70px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.challenge-participant-bar {
+    flex: 1; height: 8px; border-radius: 4px;
+    background: var(--bg-warm); overflow: hidden;
+}
+.challenge-participant-fill {
+    height: 100%; border-radius: 4px; transition: width 0.3s ease; min-width: 2px;
+}
+.challenge-participant-value {
+    font-size: 11px; font-weight: 600; color: var(--text-secondary);
+    min-width: 35px; text-align: left;
+}
+.challenge-join-btn {
+    width: 100%; margin-top: 8px; padding: 8px;
+    border: 2px dashed var(--primary); border-radius: 8px;
+    background: var(--primary-light); color: var(--primary);
+    font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer;
+}
+.challenge-winner-banner {
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    color: white; text-align: center; padding: 8px; border-radius: 6px;
+    margin-top: 8px; font-size: 13px; font-weight: 600;
+}
+
+/* Goal Cards */
+.goal-card {
+    background: var(--bg); border: 1px solid #E3E2DE; border-radius: 10px;
+    padding: 14px; margin-bottom: 10px; display: flex; gap: 12px; align-items: center;
+}
+.goal-card--completed { border-color: #4DAB9A; background: #F0FFF4; }
+.goal-progress-ring { flex-shrink: 0; }
+.goal-info { flex: 1; min-width: 0; }
+.goal-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.goal-progress-text { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.goal-type-badge {
+    font-size: 10px; padding: 2px 6px; border-radius: 4px;
+    font-weight: 600; display: inline-block; margin-top: 4px;
+}
+.goal-type-badge--group { background: #E8F5E9; color: #4DAB9A; }
+.goal-type-badge--personal { background: #F3E8FF; color: #6940A5; }
+.goal-contribute-btn {
+    padding: 6px 10px; border-radius: 6px; border: 1px solid var(--primary);
+    background: white; color: var(--primary); font-size: 11px; font-weight: 600;
+    font-family: inherit; cursor: pointer; white-space: nowrap;
+}
+.challenges-empty, .goals-empty {
+    text-align: center; padding: 20px; color: var(--text-muted); font-size: 13px;
+}
+.form-select {
+    width: 100%; padding: 10px 12px; border: 1px solid #E3E2DE; border-radius: 8px;
+    font-size: 14px; font-family: inherit; background: white;
+    color: var(--text-primary); direction: rtl;
+}

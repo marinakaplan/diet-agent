@@ -12,7 +12,11 @@ const XP_REWARDS = {
     add_measurements: 10,
     add_blood_test: 20,
     water_complete: 15,
-    achievement_unlock: 50
+    achievement_unlock: 50,
+    challenge_win: 100,
+    challenge_participate: 25,
+    goal_complete: 75,
+    goal_contribute: 10
 };
 
 const LEVELS = [
@@ -565,6 +569,33 @@ const ACHIEVEMENTS = [
         check: function() {
             const groups = getData('myGroups', []);
             return groups.length >= 1 && getWaterToday() >= 8;
+        }
+    },
+    {
+        id: 'social_first_challenge',
+        name: 'מאתגרת',
+        emoji: '🎯',
+        description: 'הצטרפת לאתגר קבוצתי ראשון',
+        check: function() {
+            return getData('game_challenges_joined', 0) >= 1;
+        }
+    },
+    {
+        id: 'social_challenge_winner',
+        name: 'אלופת האתגרים',
+        emoji: '🏆',
+        description: 'ניצחת באתגר קבוצתי',
+        check: function() {
+            return getData('game_challenges_won', 0) >= 1;
+        }
+    },
+    {
+        id: 'social_goal_crusher',
+        name: 'שוברת יעדים',
+        emoji: '💥',
+        description: 'השלמת יעד קבוצתי',
+        check: function() {
+            return getData('game_goals_completed', 0) >= 1;
         }
     }
 ];

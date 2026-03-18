@@ -365,6 +365,8 @@ function getActivityIcon(type) {
         case 'achievement': return icon('trophy', 16);
         case 'streak': return icon('flame', 16);
         case 'exercise': return icon('heart', 16);
+        case 'challenge': return '<span style="font-size:16px">🎯</span>';
+        case 'goal': return '<span style="font-size:16px">✨</span>';
         default: return icon('star', 16);
     }
 }
@@ -391,6 +393,20 @@ function getActivityText(activity) {
             return `<strong>${name}</strong> ברצף של ${activity.data.days} ימים!`;
         case 'exercise':
             return `<strong>${name}</strong> התאמנה: ${activity.data.name || 'אימון'}${activity.data.duration ? ' (' + activity.data.duration + ' דק׳)' : ''}`;
+        case 'challenge': {
+            const d = activity.data || {};
+            if (d.action === 'created') return `<strong>${name}</strong> יצרה אתגר חדש: ${d.title}`;
+            if (d.action === 'joined') return `<strong>${name}</strong> הצטרפה לאתגר: ${d.title}`;
+            if (d.action === 'completed') return `🏆 <strong>${d.winnerName || name}</strong> ניצחה באתגר: ${d.title}!`;
+            return `<strong>${name}</strong> עדכנה אתגר`;
+        }
+        case 'goal': {
+            const d = activity.data || {};
+            if (d.action === 'created') return `<strong>${name}</strong> הגדירה יעד: ${d.title}`;
+            if (d.action === 'contributed') return `<strong>${name}</strong> תרמה ליעד: ${d.title}`;
+            if (d.action === 'completed') return `🎉 היעד הושלם: ${d.title}!`;
+            return `<strong>${name}</strong> עדכנה יעד`;
+        }
         default:
             return `<strong>${name}</strong> עדכנה נתונים`;
     }
@@ -446,6 +462,21 @@ let _activeGroupView = null; // Track which group detail is open
 let _groupDataCache = {}; // Cache loaded leaderboard data
 let _activeGroupTab = {}; // Track active tab per group: 'leaderboard' or 'feed'
 let _activityCache = {}; // Cache loaded activity feeds
+let _challengeCache = {};
+let _goalCache = {};
+let _celebratedChallenges = {};
+let _activeCreateGroupId = null;  // tracks which group the create modals are for
+
+function getChallengeTypeInfo(type) {
+    const types = {
+        water: { icon: '\u{1F4A7}', label: '\u05E9\u05EA\u05D9\u05D9\u05EA \u05DE\u05D9\u05DD', color: '#069494', unit: '\u05DB\u05D5\u05E1\u05D5\u05EA' },
+        exercise_streak: { icon: '\u{1F525}', label: '\u05E8\u05E6\u05E3 \u05D0\u05D9\u05DE\u05D5\u05E0\u05D9\u05DD', color: '#EB5757', unit: '\u05D9\u05DE\u05D9\u05DD' },
+        weight_loss: { icon: '\u{1F4C9}', label: '\u05D9\u05E8\u05D9\u05D3\u05D4 \u05D1\u05DE\u05E9\u05E7\u05DC', color: '#6940A5', unit: '\u05E7"\u05D2' },
+        healthy_eating: { icon: '\u{1F957}', label: '\u05D0\u05D5\u05DB\u05DC \u05D1\u05E8\u05D9\u05D0', color: '#4DAB9A', unit: '\u05E6\u05D9\u05D5\u05DF' },
+        calories: { icon: '\u{1F3AF}', label: '\u05E9\u05DC\u05D9\u05D8\u05D4 \u05D1\u05E7\u05DC\u05D5\u05E8\u05D9\u05D5\u05EA', color: '#CB912F', unit: '\u05D9\u05DE\u05D9\u05DD' },
+    };
+    return types[type] || types.water;
+}
 
 function refreshGroupsPage() {
     const container = document.getElementById('groups-content');
@@ -582,12 +613,15 @@ async function loadGroupDetail(groupId) {
         </div>
     `;
 
-    // Tabs: Leaderboard / Feed
+    // Tabs: Feed / Challenges / Leaderboard
     const activeTab = _activeGroupTab[groupId] || 'feed';
     html += `
         <div class="group-tabs">
             <button class="group-tab ${activeTab === 'feed' ? 'group-tab--active' : ''}" onclick="event.stopPropagation(); switchGroupTab('${groupId}', 'feed')">
-                ${icon('clock', 14)} פיד פעילות
+                ${icon('clock', 14)} פיד
+            </button>
+            <button class="group-tab ${activeTab === 'challenges' ? 'group-tab--active' : ''}" onclick="event.stopPropagation(); switchGroupTab('${groupId}', 'challenges')">
+                🎯 אתגרים
             </button>
             <button class="group-tab ${activeTab === 'leaderboard' ? 'group-tab--active' : ''}" onclick="event.stopPropagation(); switchGroupTab('${groupId}', 'leaderboard')">
                 ${icon('trophy', 14)} לידרבורד
@@ -611,6 +645,13 @@ async function loadGroupDetail(groupId) {
             html += renderActivityFeed(activities);
         }
         html += `</div>`;
+    }
+
+    // Challenges Tab
+    if (activeTab === 'challenges') {
+        html += '<div id="challenges-container-' + groupId + '"><div style="text-align:center;padding:20px;color:var(--text-muted)">טוען אתגרים...</div></div>';
+        // Load after render
+        setTimeout(() => loadChallengesAndGoals(groupId), 100);
     }
 
     // Leaderboard Tab
@@ -683,6 +724,10 @@ async function switchGroupTab(groupId, tab) {
     _activeGroupTab[groupId] = tab;
     // Clear activity cache to force refresh when switching to feed
     if (tab === 'feed') delete _activityCache[groupId];
+    if (tab === 'challenges') {
+        delete _challengeCache[groupId];
+        delete _goalCache[groupId];
+    }
     await loadGroupDetail(groupId);
 }
 
@@ -731,4 +776,335 @@ async function doLeaveGroup(groupId) {
             });
         } catch { /* ignore server errors */ }
     }
+}
+
+// ============ Challenges & Goals ============
+async function loadChallengesAndGoals(groupId) {
+    const container = document.getElementById('challenges-container-' + groupId);
+    if (!container) return;
+
+    try {
+        const [chRes, glRes] = await Promise.all([
+            fetch('/api/group?action=challenge-progress&groupId=' + groupId),
+            fetch('/api/group?action=goal-progress&groupId=' + groupId)
+        ]);
+        const challenges = chRes.ok ? (await chRes.json()).challenges || [] : [];
+        const goals = glRes.ok ? (await glRes.json()).goals || [] : [];
+
+        // Auto-complete expired challenges
+        const today = getTodayKey();
+        for (const ch of challenges) {
+            if (ch.status === 'active' && ch.end_date <= today) {
+                await fetch('/api/group?action=challenge-complete', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ challengeId: ch.challenge_id })
+                });
+                ch.status = 'completed';
+            }
+        }
+
+        container.innerHTML = renderChallengesTab(groupId, challenges, goals);
+    } catch(e) {
+        container.innerHTML = '<div class="challenges-empty">שגיאה בטעינת אתגרים</div>';
+    }
+}
+
+function renderChallengesTab(groupId, challenges, goals) {
+    const myUserId = localStorage.getItem('userId');
+    let html = '';
+
+    // Challenges section
+    html += '<div class="challenges-section">';
+    html += '<div class="challenges-section-header">';
+    html += '<span class="challenges-section-title">🏆 אתגרים</span>';
+    html += `<button class="challenge-create-btn" onclick="openCreateChallenge('${groupId}')">+ צרי אתגר</button>`;
+    html += '</div>';
+
+    const activeChallenges = challenges.filter(c => c.status === 'active');
+    const completedChallenges = challenges.filter(c => c.status === 'completed');
+
+    if (activeChallenges.length === 0 && completedChallenges.length === 0) {
+        html += '<div class="challenges-empty">🎯 אין אתגרים עדיין. צרי אתגר ראשון!</div>';
+    } else {
+        activeChallenges.forEach(ch => { html += renderChallengeCard(ch, myUserId); });
+        completedChallenges.slice(0, 3).forEach(ch => { html += renderChallengeCard(ch, myUserId); });
+    }
+    html += '</div>';
+
+    // Goals section
+    html += '<div class="challenges-section">';
+    html += '<div class="challenges-section-header">';
+    html += '<span class="challenges-section-title">🎯 יעדים</span>';
+    html += `<button class="challenge-create-btn" onclick="openCreateGoal('${groupId}')">+ הגדירי יעד</button>`;
+    html += '</div>';
+
+    const activeGoals = goals.filter(g => g.status === 'active');
+    const completedGoals = goals.filter(g => g.status === 'completed');
+
+    if (activeGoals.length === 0 && completedGoals.length === 0) {
+        html += '<div class="goals-empty">✨ אין יעדים עדיין. הגדירי יעד ראשון!</div>';
+    } else {
+        activeGoals.forEach(g => { html += renderGoalCard(g, myUserId); });
+        completedGoals.slice(0, 3).forEach(g => { html += renderGoalCard(g, myUserId); });
+    }
+    html += '</div>';
+
+    return html;
+}
+
+function renderChallengeCard(challenge, myUserId) {
+    const info = getChallengeTypeInfo(challenge.type);
+    const isCompleted = challenge.status === 'completed';
+    const participants = challenge.participants || [];
+    const isJoined = participants.some(p => p.userId === myUserId);
+
+    // Countdown
+    let countdown = '';
+    if (isCompleted) {
+        countdown = '<span class="challenge-countdown challenge-countdown--ended">הסתיים ✓</span>';
+    } else {
+        const endDate = new Date(challenge.end_date + 'T23:59:59');
+        const now = new Date();
+        const daysLeft = Math.max(0, Math.ceil((endDate - now) / (1000*60*60*24)));
+        countdown = `<span class="challenge-countdown">נותרו ${daysLeft} ימים</span>`;
+    }
+
+    // Sort participants by progress desc
+    const sorted = [...participants].sort((a,b) => (b.progress||0) - (a.progress||0));
+    const maxProgress = sorted.length > 0 ? Math.max(1, sorted[0].progress || 1) : 1;
+
+    let html = `<div class="challenge-card ${isCompleted ? 'challenge-card--completed' : ''}">`;
+    html += '<div class="challenge-card-header">';
+    html += `<div class="challenge-card-icon" style="background:${info.color}15">${info.icon}</div>`;
+    html += '<div class="challenge-card-info">';
+    html += `<div class="challenge-card-title">${challenge.title}</div>`;
+    html += `<div class="challenge-card-meta">${info.label} · ${participants.length} משתתפות</div>`;
+    html += '</div>';
+    html += countdown;
+    html += '</div>';
+
+    // Participants progress
+    if (sorted.length > 0) {
+        html += '<div class="challenge-participants">';
+        sorted.forEach((p, i) => {
+            const pct = maxProgress > 0 ? Math.min(100, ((p.progress||0) / maxProgress) * 100) : 0;
+            const isMe = p.userId === myUserId;
+            html += '<div class="challenge-participant">';
+            html += `<span class="challenge-participant-rank">${i+1}</span>`;
+            html += `<span class="challenge-participant-name" style="${isMe?'font-weight:700;color:var(--primary)':''}">${p.displayName || 'אנונימית'}${isMe?' (את)':''}</span>`;
+            html += '<div class="challenge-participant-bar">';
+            html += `<div class="challenge-participant-fill" style="width:${pct}%;background:${info.color}"></div>`;
+            html += '</div>';
+            html += `<span class="challenge-participant-value">${(p.progress||0).toFixed(info.unit==='ק"ג'?1:0)} ${info.unit}</span>`;
+            html += '</div>';
+        });
+        html += '</div>';
+    }
+
+    // Join button
+    if (!isCompleted && !isJoined) {
+        html += `<button class="challenge-join-btn" onclick="joinChallenge('${challenge.challenge_id}')">הצטרפי לאתגר! 💪</button>`;
+    }
+
+    // Winner banner
+    if (isCompleted && challenge.winner_name) {
+        html += `<div class="challenge-winner-banner">🏆 ${challenge.winner_name} ניצחה!</div>`;
+
+        // Celebration for current user
+        if (challenge.winner_user_id === myUserId && !_celebratedChallenges[challenge.challenge_id]) {
+            _celebratedChallenges[challenge.challenge_id] = true;
+            setTimeout(() => {
+                if (typeof launchConfetti === 'function') launchConfetti();
+                showToast('ניצחת באתגר! 🏆 +100 XP');
+            }, 500);
+        }
+    }
+
+    html += '</div>';
+    return html;
+}
+
+function renderGoalCard(goal, myUserId) {
+    const isCompleted = goal.status === 'completed';
+    const pct = goal.target_value > 0 ? Math.min(100, (goal.current_value / goal.target_value) * 100) : 0;
+    const isGroup = goal.type === 'group';
+
+    // SVG progress ring
+    const size = 50;
+    const stroke = 4;
+    const radius = (size - stroke) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference - (pct / 100) * circumference;
+    const ringColor = isCompleted ? '#4DAB9A' : 'var(--primary)';
+
+    const ring = `<svg class="goal-progress-ring" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+        <circle cx="${size/2}" cy="${size/2}" r="${radius}" fill="none" stroke="#E3E2DE" stroke-width="${stroke}"/>
+        <circle cx="${size/2}" cy="${size/2}" r="${radius}" fill="none" stroke="${ringColor}" stroke-width="${stroke}"
+            stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"
+            stroke-linecap="round" transform="rotate(-90 ${size/2} ${size/2})"
+            style="transition:stroke-dashoffset 0.5s ease"/>
+        <text x="${size/2}" y="${size/2}" text-anchor="middle" dominant-baseline="central"
+            font-size="11" font-weight="700" fill="var(--text-primary)">${Math.round(pct)}%</text>
+    </svg>`;
+
+    let html = `<div class="goal-card ${isCompleted ? 'goal-card--completed' : ''}">`;
+    html += ring;
+    html += '<div class="goal-info">';
+    html += `<div class="goal-title">${isCompleted ? '✅ ' : ''}${goal.title}</div>`;
+    html += `<div class="goal-progress-text">${goal.current_value}/${goal.target_value} ${goal.unit}</div>`;
+    html += `<span class="goal-type-badge goal-type-badge--${goal.type}">${isGroup ? '👥 קבוצתי' : '👤 אישי'}</span>`;
+    if (goal.deadline) {
+        html += `<span style="font-size:10px;color:var(--text-muted);margin-right:6px">עד ${goal.deadline}</span>`;
+    }
+    html += '</div>';
+
+    if (!isCompleted && isGroup) {
+        html += `<button class="goal-contribute-btn" onclick="openContributeGoal('${goal.goal_id}','${goal.title}','${goal.unit}')">הוסיפי</button>`;
+    }
+    html += '</div>';
+    return html;
+}
+
+// ============ Challenge & Goal Actions ============
+function openCreateChallenge(groupId) {
+    _activeCreateGroupId = groupId;
+    document.getElementById('input-challenge-title').value = '';
+    openModal('create-challenge-modal');
+}
+
+async function submitCreateChallenge() {
+    const type = document.getElementById('input-challenge-type').value;
+    const title = document.getElementById('input-challenge-title').value.trim();
+    const duration = parseInt(document.getElementById('input-challenge-duration').value);
+    const userId = localStorage.getItem('userId');
+
+    if (!title) { showToast('הכניסי שם לאתגר'); return; }
+    if (!_activeCreateGroupId) return;
+
+    closeModal('create-challenge-modal');
+    showToast('יוצרת אתגר...');
+
+    try {
+        const resp = await fetch('/api/group?action=challenge-create', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({
+                userId,
+                groupId: _activeCreateGroupId,
+                type,
+                title,
+                durationDays: duration
+            })
+        });
+        if (resp.ok) {
+            showToast('האתגר נוצר! 🎯');
+            loadChallengesAndGoals(_activeCreateGroupId);
+        } else {
+            showToast('שגיאה ביצירת אתגר');
+        }
+    } catch(e) { showToast('שגיאה ביצירת אתגר'); }
+}
+
+async function joinChallenge(challengeId) {
+    const userId = localStorage.getItem('userId');
+    try {
+        const resp = await fetch('/api/group?action=challenge-join', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ userId, challengeId })
+        });
+        if (resp.ok) {
+            showToast('הצטרפת לאתגר! 💪');
+            // Reload current group challenges
+            if (_activeGroupView) loadChallengesAndGoals(_activeGroupView);
+        } else {
+            const data = await resp.json().catch(() => ({}));
+            showToast(data.error || 'שגיאה בהצטרפות');
+        }
+    } catch(e) { showToast('שגיאה בהצטרפות'); }
+}
+
+function openCreateGoal(groupId) {
+    _activeCreateGroupId = groupId;
+    document.getElementById('input-goal-title').value = '';
+    document.getElementById('input-goal-target').value = '';
+    document.getElementById('input-goal-unit').value = '';
+    document.getElementById('input-goal-deadline').value = '';
+    openModal('create-goal-modal');
+}
+
+async function submitCreateGoal() {
+    const type = document.getElementById('input-goal-type').value;
+    const category = document.getElementById('input-goal-category').value;
+    const title = document.getElementById('input-goal-title').value.trim();
+    const target = parseFloat(document.getElementById('input-goal-target').value);
+    const unit = document.getElementById('input-goal-unit').value.trim();
+    const deadline = document.getElementById('input-goal-deadline').value || null;
+    const userId = localStorage.getItem('userId');
+
+    if (!title || !target) { showToast('מלאי שם ויעד'); return; }
+    if (!_activeCreateGroupId) return;
+
+    closeModal('create-goal-modal');
+    showToast('יוצרת יעד...');
+
+    try {
+        const resp = await fetch('/api/group?action=goal-create', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({
+                userId,
+                groupId: _activeCreateGroupId,
+                type,
+                category,
+                title,
+                targetValue: target,
+                unit: unit || 'יח\'',
+                deadline
+            })
+        });
+        if (resp.ok) {
+            showToast('היעד נוצר! ✨');
+            loadChallengesAndGoals(_activeCreateGroupId);
+        } else {
+            showToast('שגיאה ביצירת יעד');
+        }
+    } catch(e) { showToast('שגיאה ביצירת יעד'); }
+}
+
+let _activeContributeGoalId = null;
+function openContributeGoal(goalId, title, unit) {
+    _activeContributeGoalId = goalId;
+    document.getElementById('contribute-goal-text').textContent = `כמה ${unit} להוסיף ל"${title}"?`;
+    document.getElementById('input-contribute-amount').value = '';
+    openModal('contribute-goal-modal');
+}
+
+async function submitContributeGoal() {
+    const amount = parseFloat(document.getElementById('input-contribute-amount').value);
+    const userId = localStorage.getItem('userId');
+
+    if (!amount || amount <= 0) { showToast('הכניסי כמות'); return; }
+    if (!_activeContributeGoalId) return;
+
+    closeModal('contribute-goal-modal');
+
+    try {
+        const resp = await fetch('/api/group?action=goal-progress', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ userId, goalId: _activeContributeGoalId, amount })
+        });
+        if (resp.ok) {
+            const data = await resp.json();
+            if (data.goal && data.goal.status === 'completed') {
+                showToast('היעד הושלם! 🎉');
+                if (typeof launchConfetti === 'function') launchConfetti();
+            } else {
+                showToast('התרומה נוספה! 👏');
+            }
+            if (_activeGroupView) loadChallengesAndGoals(_activeGroupView);
+        }
+    } catch(e) { showToast('שגיאה'); }
 }

@@ -769,6 +769,110 @@
             </div>
         </div>
 
+        <!-- Create Challenge Modal -->
+        <div class="modal-overlay" id="create-challenge-modal" onclick="closeModalOverlay(event)">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3>צרי אתגר חדש</h3>
+                    <button class="modal-close" onclick="closeModal('create-challenge-modal')">&#10005;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>סוג אתגר</label>
+                        <select id="input-challenge-type" class="form-select">
+                            <option value="water">💧 שתיית מים - מי שותה הכי הרבה</option>
+                            <option value="exercise_streak">🔥 רצף אימונים - מי מתאמנת הכי הרבה ימים</option>
+                            <option value="weight_loss">📉 ירידה במשקל - מי יורדת הכי הרבה</option>
+                            <option value="healthy_eating">🥗 אוכל בריא - מי מקבלת ציוני בריאות הכי גבוהים</option>
+                            <option value="calories">🎯 צעדי קלוריות - מי הכי קרובה ליעד</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>שם האתגר</label>
+                        <input type="text" id="input-challenge-title" placeholder="למשל: מי השתיינית הכי טובה?" maxlength="50">
+                    </div>
+                    <div class="form-group">
+                        <label>משך האתגר</label>
+                        <select id="input-challenge-duration" class="form-select">
+                            <option value="3">3 ימים</option>
+                            <option value="7" selected>שבוע</option>
+                            <option value="14">שבועיים</option>
+                            <option value="30">חודש</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-primary" onclick="submitCreateChallenge()">צרי אתגר 🎯</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Goal Modal -->
+        <div class="modal-overlay" id="create-goal-modal" onclick="closeModalOverlay(event)">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3>הגדירי יעד</h3>
+                    <button class="modal-close" onclick="closeModal('create-goal-modal')">&#10005;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>סוג יעד</label>
+                        <select id="input-goal-type" class="form-select">
+                            <option value="group">🎯 יעד קבוצתי - כולנו ביחד</option>
+                            <option value="personal">👤 יעד אישי - בתוך הקבוצה</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>קטגוריה</label>
+                        <select id="input-goal-category" class="form-select">
+                            <option value="water">💧 שתיית מים</option>
+                            <option value="exercise">🏃 אימונים</option>
+                            <option value="weight">⚖️ משקל</option>
+                            <option value="custom">✏️ מותאם אישית</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>שם היעד</label>
+                        <input type="text" id="input-goal-title" placeholder="למשל: 100 כוסות מים השבוע" maxlength="60">
+                    </div>
+                    <div class="form-group" style="display:flex;gap:8px;">
+                        <div style="flex:2">
+                            <label>יעד</label>
+                            <input type="number" id="input-goal-target" placeholder="100" min="1" inputmode="numeric">
+                        </div>
+                        <div style="flex:1">
+                            <label>יחידה</label>
+                            <input type="text" id="input-goal-unit" placeholder="כוסות" maxlength="15">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>תאריך יעד (אופציונלי)</label>
+                        <input type="date" id="input-goal-deadline">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-primary" onclick="submitCreateGoal()">צרי יעד 🎯</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contribute to Goal Modal -->
+        <div class="modal-overlay" id="contribute-goal-modal" onclick="closeModalOverlay(event)">
+            <div class="modal" style="max-width:320px">
+                <div class="modal-header">
+                    <h3>הוסיפי תרומה</h3>
+                    <button class="modal-close" onclick="closeModal('contribute-goal-modal')">&#10005;</button>
+                </div>
+                <div class="modal-body">
+                    <p id="contribute-goal-text" style="margin-bottom:12px;color:var(--text-secondary)"></p>
+                    <input type="number" id="input-contribute-amount" placeholder="כמות" min="1" inputmode="numeric" style="font-size:1.2rem;text-align:center;">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-primary" onclick="submitContributeGoal()">הוסיפי ➕</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Hidden progress photo input -->
         <input type="file" id="progress-photo-input" accept="image/*" capture="user" onchange="handleProgressPhoto(this)" style="display:none">
 
