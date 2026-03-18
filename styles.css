@@ -19,7 +19,7 @@
     /* Text */
     --text: #37352F;
     --text-secondary: #787774;
-    --text-muted: #B4B4B0;
+    --text-muted: #9B9B97;
 
     /* Accents */
     --accent-coral: #EB5757;
@@ -40,6 +40,12 @@
     --warning: #CB912F;
     --danger: #EB5757;
     --info: #529CCA;
+
+    /* Cards & Shadows */
+    --radius-lg: 14px;
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
+    --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.06);
+    --shadow-modal: 0 16px 48px rgba(0,0,0,0.12);
 
     /* Layout */
     --radius: 6px;
@@ -2515,13 +2521,24 @@ body {
 
 .modal {
     background: var(--surface);
-    border-radius: var(--radius) var(--radius) 0 0;
+    border-radius: 20px 20px 0 0;
     width: 100%;
     max-width: 500px;
     max-height: 85vh;
     overflow-y: auto;
     animation: slideUp 0.2s ease;
     border-top: var(--border);
+    box-shadow: var(--shadow-modal);
+}
+
+.modal::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 4px;
+    background: #D4D4D0;
+    border-radius: 2px;
+    margin: 8px auto 0;
 }
 
 @keyframes slideUp {
@@ -2533,7 +2550,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 20px;
+    padding: 20px 24px;
     border-bottom: var(--border);
     position: sticky;
     top: 0;
@@ -2541,16 +2558,16 @@ body {
 }
 
 .modal-header h3 {
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 600;
 }
 
 .modal-close {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     border: none;
     background: var(--bg-warm);
-    border-radius: var(--radius);
+    border-radius: 50%;
     cursor: pointer;
     font-size: 0.85rem;
     display: flex;
@@ -2565,35 +2582,37 @@ body {
 }
 
 .modal-body {
-    padding: 20px;
+    padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 18px;
 }
 
 .modal-body .form-group {
     width: 100%;
 }
 
-.modal-body input {
-    padding: 10px 12px;
+.modal-body input,
+.modal-body select {
+    padding: 14px 16px;
     border: var(--border);
-    border-radius: var(--radius);
+    border-radius: 12px;
     font-family: 'Inter', 'Heebo', -apple-system, system-ui, sans-serif;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     font-weight: 400;
     width: 100%;
     background: var(--bg);
     color: var(--text);
 }
 
-.modal-body input:focus {
+.modal-body input:focus,
+.modal-body select:focus {
     outline: none;
     border-color: var(--primary);
 }
 
 .modal-footer {
-    padding: 16px 20px;
+    padding: 20px 24px;
     border-top: var(--border);
 }
 
@@ -3126,33 +3145,34 @@ body {
 /* My Profile Card */
 .groups-my-profile {
     background: var(--bg-warm);
-    border-radius: var(--radius);
-    padding: 20px;
+    border-radius: 16px;
+    padding: 20px 24px;
     margin-bottom: 16px;
     display: flex;
     align-items: center;
     gap: 14px;
     color: var(--text);
-    border: var(--border);
+    border: 1px solid rgba(0,0,0,0.04);
     position: relative;
     overflow: hidden;
+    box-shadow: var(--shadow-card);
 }
 
 .groups-my-profile::before {
-    display: none;
+    display: block;
 }
 
 .groups-my-profile-avatar {
     font-size: 28px;
     background: var(--bg);
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: var(--radius);
+    border-radius: 50%;
     flex-shrink: 0;
-    border: var(--border);
+    border: 2px solid var(--primary);
 }
 
 .groups-my-profile-info {
@@ -3181,7 +3201,7 @@ body {
     cursor: pointer;
     flex-shrink: 0;
     border: var(--border);
-    transition: background 0.15s ease;
+    transition: all 0.2s ease;
 }
 
 .groups-my-profile-code:active {
@@ -3209,17 +3229,17 @@ body {
 /* Group Action Buttons */
 .group-actions {
     display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
+    gap: 12px;
+    margin-bottom: 24px;
 }
 
 .group-action-btn {
     flex: 1;
-    padding: 10px 12px;
+    padding: 14px 16px;
     border: var(--border);
-    border-radius: var(--radius);
+    border-radius: 14px;
     font-family: 'Inter', 'Heebo', -apple-system, system-ui, sans-serif;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-weight: 500;
     cursor: pointer;
     transition: background 0.15s ease;
@@ -3228,13 +3248,15 @@ body {
 }
 
 .group-action-btn:active {
-    background: var(--bg-warm);
+    transform: scale(0.97);
+    opacity: 0.9;
 }
 
 .group-action-btn--create {
     background: var(--primary);
     color: #FFFFFF;
     border-color: var(--primary);
+    box-shadow: 0 2px 8px rgba(6,148,148,0.25);
 }
 
 .group-action-btn--create:active {
@@ -3242,9 +3264,9 @@ body {
 }
 
 .group-action-btn--join {
-    background: var(--bg);
+    background: var(--bg-warm);
     color: var(--text);
-    border: var(--border);
+    border: none;
 }
 
 /* Section Title */
@@ -3361,12 +3383,13 @@ body {
 /* Group Card */
 .group-card {
     background: var(--surface);
-    border-radius: var(--radius);
+    border-radius: 14px;
     padding: 0;
     margin-bottom: 10px;
-    border: var(--border);
+    border: 1px solid rgba(0,0,0,0.04);
     overflow: hidden;
     transition: border-color 0.15s ease;
+    box-shadow: var(--shadow-card);
 }
 
 .group-card--active {
@@ -3377,7 +3400,7 @@ body {
     display: flex;
     align-items: center;
     gap: 14px;
-    padding: 14px 16px;
+    padding: 16px 20px;
     cursor: pointer;
     transition: background 0.15s ease;
 }
@@ -3391,7 +3414,7 @@ body {
     width: 40px;
     height: 40px;
     background: var(--bg-warm);
-    border-radius: var(--radius);
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3404,13 +3427,13 @@ body {
 }
 
 .group-card-name {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     font-weight: 600;
     color: var(--text);
 }
 
 .group-card-meta {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     color: var(--text-muted);
     font-weight: 400;
     margin-top: 2px;
@@ -3429,8 +3452,8 @@ body {
 }
 
 @keyframes slideDown {
-    from { opacity: 0; max-height: 0; }
-    to { opacity: 1; max-height: 2000px; }
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .group-detail-loading,
@@ -3444,8 +3467,8 @@ body {
 
 .group-detail-actions {
     display: flex;
-    gap: 6px;
-    padding: 12px 16px;
+    gap: 10px;
+    padding: 14px 20px;
     border-bottom: var(--border);
     overflow-x: auto;
     scrollbar-width: none;
@@ -3454,7 +3477,7 @@ body {
 .group-detail-action {
     padding: 6px 14px;
     border: var(--border);
-    border-radius: var(--radius);
+    border-radius: 20px;
     background: var(--bg);
     color: var(--text-secondary);
     font-family: 'Inter', 'Heebo', -apple-system, system-ui, sans-serif;
@@ -3495,10 +3518,10 @@ body {
 .lb-member {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    margin-bottom: 6px;
-    border-radius: var(--radius);
+    gap: 12px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    border-radius: 12px;
     background: var(--bg-warm);
     cursor: pointer;
     transition: background 0.15s ease;
@@ -3511,7 +3534,13 @@ body {
 
 .lb-member--me {
     background: var(--primary-light);
-    border: 1px solid var(--primary);
+    border: 2px solid var(--primary);
+    border-radius: 14px;
+}
+
+.lb-member:first-child {
+    background: linear-gradient(135deg, #FFF9E6 0%, #FFF4D6 100%);
+    border: 1px solid rgba(255,215,0,0.2);
 }
 
 .lb-member-rank {
@@ -3552,13 +3581,13 @@ body {
 }
 
 .lb-member-name {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-weight: 500;
     color: var(--text);
 }
 
 .lb-member-level {
-    font-size: 0.72rem;
+    font-size: 0.78rem;
     color: var(--text-muted);
     font-weight: 400;
     margin-top: 2px;
@@ -3597,12 +3626,12 @@ body {
 .lb-member-detail-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
+    gap: 10px;
 }
 
 .lb-detail-stat {
     text-align: center;
-    padding: 8px 4px;
+    padding: 10px 8px;
     background: var(--bg-warm);
     border-radius: var(--radius);
 }
@@ -3613,7 +3642,7 @@ body {
 
 .lb-detail-stat-value {
     display: block;
-    font-size: 0.82rem;
+    font-size: 0.88rem;
     font-weight: 600;
     color: var(--text);
     margin-bottom: 2px;
@@ -3621,7 +3650,7 @@ body {
 
 .lb-detail-stat-label {
     display: block;
-    font-size: 0.62rem;
+    font-size: 0.72rem;
     color: var(--text-muted);
     font-weight: 400;
 }
@@ -3920,42 +3949,38 @@ body {
 /* ============ Group Tabs ============ */
 .group-tabs {
     display: flex;
-    gap: 0;
-    border: 1px solid #E3E2DE;
-    border-radius: 6px;
-    overflow: hidden;
-    margin-bottom: 12px;
+    gap: 4px;
+    padding: 4px;
+    background: var(--bg-warm);
+    border-radius: 12px;
+    margin: 14px 20px 16px;
+    border: none;
 }
-
 .group-tab {
     flex: 1;
-    padding: 8px 12px;
-    font-size: 13px;
+    padding: 10px 16px;
+    font-size: 0.82rem;
     font-weight: 500;
-    background: var(--bg);
+    background: transparent;
     color: var(--text-secondary);
     border: none;
+    border-radius: 10px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    transition: all 0.15s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     font-family: inherit;
 }
-
 .group-tab + .group-tab {
-    border-right: 1px solid #E3E2DE;
+    border-right: none;
 }
-
 .group-tab--active {
-    background: var(--primary-light);
+    background: var(--bg);
     color: var(--primary);
     font-weight: 600;
-}
-
-.group-tab:active {
-    background: var(--bg-warm);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 
 /* ============ Activity Feed ============ */
@@ -3993,7 +4018,7 @@ body {
 }
 
 .activity-date-divider {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -4003,6 +4028,13 @@ body {
     border-top: 1px solid #F0EFED;
 }
 
+.activity-date-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #E3E2DE;
+}
+
 .activity-date-divider:first-child {
     border-top: none;
     margin-top: 0;
@@ -4010,8 +4042,8 @@ body {
 
 .activity-item {
     display: flex;
-    gap: 10px;
-    padding: 10px 0;
+    gap: 12px;
+    padding: 12px 0;
     border-bottom: 1px solid #F0EFED;
     align-items: flex-start;
 }
@@ -4021,9 +4053,9 @@ body {
 }
 
 .activity-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -4063,7 +4095,7 @@ body {
 }
 
 .activity-text {
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.5;
     color: var(--text);
 }
@@ -4080,7 +4112,7 @@ body {
 }
 
 .activity-cal {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--primary);
     background: var(--primary-light);
@@ -4089,7 +4121,7 @@ body {
 }
 
 .activity-time {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text-muted);
 }
 
@@ -5116,8 +5148,8 @@ body {
     display: flex; align-items: center; gap: 4px;
 }
 .challenge-card {
-    background: var(--bg); border: 1px solid #E3E2DE; border-radius: 10px;
-    padding: 14px; margin-bottom: 10px; position: relative; overflow: hidden;
+    background: var(--bg); border: 1px solid #E3E2DE; border-radius: 14px;
+    padding: 16px 18px; margin-bottom: 10px; position: relative; overflow: hidden;
 }
 .challenge-card--completed { opacity: 0.85; border-color: #4DAB9A; }
 .challenge-card-header {
@@ -5130,10 +5162,10 @@ body {
 }
 .challenge-card-info { flex: 1; min-width: 0; }
 .challenge-card-title {
-    font-size: 14px; font-weight: 600; color: var(--text-primary);
+    font-size: 15px; font-weight: 600; color: var(--text-primary);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.challenge-card-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.challenge-card-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 .challenge-countdown {
     font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 10px;
     background: #FBF3DB; color: #CB912F; white-space: nowrap;
@@ -5148,7 +5180,7 @@ body {
     min-width: 18px; text-align: center;
 }
 .challenge-participant-name {
-    font-size: 12px; font-weight: 500; color: var(--text-secondary);
+    font-size: 13px; font-weight: 500; color: var(--text-secondary);
     min-width: 55px; max-width: 70px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .challenge-participant-bar {
@@ -5159,7 +5191,7 @@ body {
     height: 100%; border-radius: 4px; transition: width 0.3s ease; min-width: 2px;
 }
 .challenge-participant-value {
-    font-size: 11px; font-weight: 600; color: var(--text-secondary);
+    font-size: 12px; font-weight: 600; color: var(--text-secondary);
     min-width: 35px; text-align: left;
 }
 .challenge-join-btn {
@@ -5176,14 +5208,14 @@ body {
 
 /* Goal Cards */
 .goal-card {
-    background: var(--bg); border: 1px solid #E3E2DE; border-radius: 10px;
-    padding: 14px; margin-bottom: 10px; display: flex; gap: 12px; align-items: center;
+    background: var(--bg); border: 1px solid #E3E2DE; border-radius: 14px;
+    padding: 16px 18px; margin-bottom: 10px; display: flex; gap: 14px; align-items: center;
 }
 .goal-card--completed { border-color: #4DAB9A; background: #F0FFF4; }
 .goal-progress-ring { flex-shrink: 0; }
 .goal-info { flex: 1; min-width: 0; }
-.goal-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
-.goal-progress-text { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.goal-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+.goal-progress-text { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
 .goal-type-badge {
     font-size: 10px; padding: 2px 6px; border-radius: 4px;
     font-weight: 600; display: inline-block; margin-top: 4px;
@@ -5202,4 +5234,75 @@ body {
     width: 100%; padding: 10px 12px; border: 1px solid #E3E2DE; border-radius: 8px;
     font-size: 14px; font-family: inherit; background: white;
     color: var(--text-primary); direction: rtl;
+}
+
+/* ============ Goal Bar ============ */
+.goal-bar-container {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--bg-warm);
+    overflow: hidden;
+    margin-top: 8px;
+}
+.goal-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+    min-width: 2px;
+}
+.goal-card-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+.goal-pct {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary);
+}
+.goal-deadline {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-right: auto;
+}
+
+/* ============ Skeleton Loading ============ */
+@keyframes skeletonShimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+.skeleton {
+    background: linear-gradient(90deg, var(--bg-warm) 25%, #EDECE9 37%, var(--bg-warm) 63%);
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.5s ease-in-out infinite;
+    border-radius: 6px;
+}
+.skeleton-card { height: 72px; border-radius: 14px; margin-bottom: 8px; }
+
+/* ============ Stagger Animations ============ */
+@keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.lb-member { animation: fadeSlideIn 0.3s ease backwards; }
+.lb-member:nth-child(1) { animation-delay: 0s; }
+.lb-member:nth-child(2) { animation-delay: 0.05s; }
+.lb-member:nth-child(3) { animation-delay: 0.1s; }
+.lb-member:nth-child(4) { animation-delay: 0.15s; }
+.lb-member:nth-child(5) { animation-delay: 0.2s; }
+
+/* ============ Mobile Breakpoints ============ */
+@media (max-width: 380px) {
+    .groups-my-profile { flex-wrap: wrap; gap: 12px; }
+    .groups-my-profile-code { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+    .group-action-btn { font-size: 0.82rem; padding: 12px 12px; }
+    .challenge-participant-name { max-width: 55px; }
+    .lb-member-detail-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 768px) {
+    .groups-my-profile { padding: 24px 28px; }
+    .group-actions { max-width: 400px; }
+    .lb-member-detail-grid { grid-template-columns: repeat(4, 1fr); }
 }

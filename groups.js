@@ -421,13 +421,11 @@ function getActivityCalories(activity) {
 
 function renderActivityFeed(activities) {
     if (!activities || activities.length === 0) {
-        return `
-            <div class="activity-empty">
-                <div class="activity-empty-icon">${icon('clock', 32)}</div>
-                <div class="activity-empty-text">עדיין אין פעילות בקבוצה</div>
-                <div class="activity-empty-hint">כשחברות ירשמו ארוחות או ישתו מים, זה יופיע כאן</div>
-            </div>
-        `;
+        return `<div style="text-align:center; padding:32px 16px; color:var(--text-muted);">
+    <div style="font-size:40px; margin-bottom:12px; opacity:0.5;">💬</div>
+    <div style="font-weight:600; margin-bottom:4px; color:var(--text-secondary);">עדיין אין פעילות בקבוצה</div>
+    <div style="font-size:0.82rem;">כשחברות ירשמו ארוחות או ישתו מים, זה יופיע כאן</div>
+</div>`;
     }
 
     let html = '';
@@ -467,6 +465,14 @@ let _goalCache = {};
 let _celebratedChallenges = {};
 let _activeCreateGroupId = null;  // tracks which group the create modals are for
 
+function renderGroupSkeleton(count = 3) {
+    let html = '';
+    for (let i = 0; i < count; i++) {
+        html += `<div class="skeleton skeleton-card" style="opacity:${1 - i * 0.2}"></div>`;
+    }
+    return html;
+}
+
 function getChallengeTypeInfo(type) {
     const types = {
         water: { icon: '\u{1F4A7}', label: '\u05E9\u05EA\u05D9\u05D9\u05EA \u05DE\u05D9\u05DD', color: '#069494', unit: '\u05DB\u05D5\u05E1\u05D5\u05EA' },
@@ -498,7 +504,7 @@ function refreshGroupsPage() {
                 <div class="groups-my-profile-meta">רמה ${myStats.level} · ${myStats.xp} XP · ${icon('flame', 14)} ${myStats.streak} ימים</div>
             </div>
             ${friendCode ? `
-                <div class="groups-my-profile-code" onclick="navigator.clipboard.writeText('${friendCode}'); showToast('הקוד הועתק!');">
+                <div class="groups-my-profile-code" onclick="navigator.clipboard.writeText('${friendCode}'); showToast('הקוד הועתק! 📋'); this.classList.add('copied'); setTimeout(()=>this.classList.remove('copied'),1500);">
                     <span class="groups-code-label">הקוד שלי</span>
                     <span class="groups-code-value">${friendCode}</span>
                 </div>
@@ -522,13 +528,16 @@ function refreshGroupsPage() {
     // Groups List
     if (groups.length === 0) {
         html += `
-            <div class="groups-empty">
-                <div class="groups-empty-emoji">👯‍♀️</div>
-                <div class="groups-empty-title">יותר כיף ביחד!</div>
-                <div class="groups-empty-text">הצטרפי לקבוצה של חברות<br>או צרי אחת חדשה</div>
-                <button class="groups-empty-join-btn" onclick="joinGroup()">יש לי קוד הצטרפות</button>
-                <button class="groups-empty-create-btn" onclick="createGroup()">צרי קבוצה חדשה</button>
-            </div>
+    <div class="groups-empty" style="background:linear-gradient(180deg, var(--primary-light) 0%, var(--bg) 100%); border-radius:20px; padding:48px 32px 36px; text-align:center; border:none; position:relative; overflow:hidden;">
+        <div style="position:relative; width:120px; height:120px; margin:0 auto 20px;">
+            <div style="position:absolute; width:120px; height:120px; border-radius:50%; background:var(--primary); opacity:0.12; animation:emptyPulse 3s ease-in-out infinite;"></div>
+            <div style="position:absolute; width:80px; height:80px; top:20px; left:20px; border-radius:50%; background:var(--primary); opacity:0.18; animation:emptyPulse 3s ease-in-out 0.5s infinite;"></div>
+            <div style="position:absolute; width:50px; height:50px; top:35px; left:35px; border-radius:50%; background:var(--primary); opacity:0.25; animation:emptyPulse 3s ease-in-out 1s infinite;"></div>
+            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:48px; z-index:1;">👯‍♀️</div>
+        </div>
+        <div style="font-size:1.2rem; font-weight:700; color:var(--text); margin-bottom:8px;">יותר כיף ביחד!</div>
+        <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.5; margin-bottom:24px;">הצטרפי לקבוצה עם חברות<br>ותתחילו לעודד אחת את השנייה</div>
+    </div>
         `;
     } else {
         for (const group of groups) {
@@ -547,7 +556,7 @@ function refreshGroupsPage() {
                         <div class="group-card-arrow">${isActive ? icon('chevronUp', 16) : icon('chevronDown', 16)}</div>
                     </div>
                     <div class="group-detail-container" id="detail-${group.groupId}" ${isActive ? '' : 'style="display:none"'}>
-                        <div class="group-detail-loading" id="loading-${group.groupId}">טוענת נתונים...</div>
+                        <div class="group-detail-loading" id="loading-${group.groupId}">${renderGroupSkeleton(2)}</div>
                     </div>
                 </div>
             `;
@@ -661,13 +670,15 @@ async function loadGroupDetail(groupId) {
 
     data.rankings.forEach((r, idx) => {
         const isMe = r.userId === myUserId;
-        const medalColors = ['#FFD700', '#C0C0C0', '#CD7F32'];
-        const rank = idx < 3 ? `<span style="color:${medalColors[idx]};font-weight:700">${idx + 1}</span>` : `${idx + 1}`;
+        const medals = ['🥇', '🥈', '🥉'];
+        const rankDisplay = idx < 3
+            ? `<span class="lb-rank" style="font-size:20px;">${medals[idx]}</span>`
+            : `<span class="lb-rank">${idx + 1}</span>`;
         const isActive = isRecentlyActive(r.lastActive);
 
         html += `
             <div class="lb-member ${isMe ? 'lb-member--me' : ''}" onclick="event.stopPropagation(); toggleMemberDetail(this)">
-                <span class="lb-member-rank">${rank}</span>
+                <span class="lb-member-rank">${rankDisplay}</span>
                 <div class="lb-member-avatar-wrap">
                     <span class="lb-member-avatar">${r.levelEmoji || '🌱'}</span>
                     ${isActive ? '<span class="lb-member-active-dot"></span>' : ''}
@@ -825,7 +836,11 @@ function renderChallengesTab(groupId, challenges, goals) {
     const completedChallenges = challenges.filter(c => c.status === 'completed');
 
     if (activeChallenges.length === 0 && completedChallenges.length === 0) {
-        html += '<div class="challenges-empty">🎯 אין אתגרים עדיין. צרי אתגר ראשון!</div>';
+        html += `<div class="challenges-empty" style="text-align:center; padding:28px 16px;">
+            <div style="font-size:40px; margin-bottom:10px;">🏆</div>
+            <div style="font-weight:600; color:var(--text-secondary); margin-bottom:4px;">אין אתגרים עדיין</div>
+            <div style="font-size:0.82rem; color:var(--text-muted);">צרי אתגר ראשון ותתחילו להתחרות!</div>
+        </div>`;
     } else {
         activeChallenges.forEach(ch => { html += renderChallengeCard(ch, myUserId); });
         completedChallenges.slice(0, 3).forEach(ch => { html += renderChallengeCard(ch, myUserId); });
@@ -843,7 +858,11 @@ function renderChallengesTab(groupId, challenges, goals) {
     const completedGoals = goals.filter(g => g.status === 'completed');
 
     if (activeGoals.length === 0 && completedGoals.length === 0) {
-        html += '<div class="goals-empty">✨ אין יעדים עדיין. הגדירי יעד ראשון!</div>';
+        html += `<div class="goals-empty" style="text-align:center; padding:28px 16px;">
+            <div style="font-size:40px; margin-bottom:10px;">🎯</div>
+            <div style="font-weight:600; color:var(--text-secondary); margin-bottom:4px;">אין יעדים עדיין</div>
+            <div style="font-size:0.82rem; color:var(--text-muted);">הגדירי יעד ראשון והתחילו לעבוד ביחד!</div>
+        </div>`;
     } else {
         activeGoals.forEach(g => { html += renderGoalCard(g, myUserId); });
         completedGoals.slice(0, 3).forEach(g => { html += renderGoalCard(g, myUserId); });
@@ -927,40 +946,22 @@ function renderChallengeCard(challenge, myUserId) {
 
 function renderGoalCard(goal, myUserId) {
     const isCompleted = goal.status === 'completed';
-    const pct = goal.target_value > 0 ? Math.min(100, (goal.current_value / goal.target_value) * 100) : 0;
-    const isGroup = goal.type === 'group';
-
-    // SVG progress ring
-    const size = 50;
-    const stroke = 4;
-    const radius = (size - stroke) / 2;
-    const circumference = 2 * Math.PI * radius;
-    const offset = circumference - (pct / 100) * circumference;
-    const ringColor = isCompleted ? '#4DAB9A' : 'var(--primary)';
-
-    const ring = `<svg class="goal-progress-ring" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-        <circle cx="${size/2}" cy="${size/2}" r="${radius}" fill="none" stroke="#E3E2DE" stroke-width="${stroke}"/>
-        <circle cx="${size/2}" cy="${size/2}" r="${radius}" fill="none" stroke="${ringColor}" stroke-width="${stroke}"
-            stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"
-            stroke-linecap="round" transform="rotate(-90 ${size/2} ${size/2})"
-            style="transition:stroke-dashoffset 0.5s ease"/>
-        <text x="${size/2}" y="${size/2}" text-anchor="middle" dominant-baseline="central"
-            font-size="11" font-weight="700" fill="var(--text-primary)">${Math.round(pct)}%</text>
-    </svg>`;
+    const pct = goal.target_value > 0 ? Math.min(100, Math.round((goal.current_value / goal.target_value) * 100)) : 0;
+    const barColor = isCompleted ? '#4DAB9A' : 'var(--primary)';
 
     let html = `<div class="goal-card ${isCompleted ? 'goal-card--completed' : ''}">`;
-    html += ring;
-    html += '<div class="goal-info">';
-    html += `<div class="goal-title">${isCompleted ? '✅ ' : ''}${goal.title}</div>`;
-    html += `<div class="goal-progress-text">${goal.current_value}/${goal.target_value} ${goal.unit}</div>`;
-    html += `<span class="goal-type-badge goal-type-badge--${goal.type}">${isGroup ? '👥 קבוצתי' : '👤 אישי'}</span>`;
-    if (goal.deadline) {
-        html += `<span style="font-size:10px;color:var(--text-muted);margin-right:6px">עד ${goal.deadline}</span>`;
-    }
-    html += '</div>';
+    html += '<div class="goal-info" style="flex:1;">';
+    html += `<div class="goal-title">${isCompleted ? '✅ ' : '🎯 '}${goal.title}</div>`;
+    html += `<div class="goal-progress-text">${goal.current_value || 0} / ${goal.target_value} ${goal.unit || ''}</div>`;
+    html += `<div class="goal-bar-container"><div class="goal-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>`;
+    html += '<div class="goal-card-footer">';
+    html += `<span class="goal-type-badge goal-type-badge--${goal.type || 'group'}">${(goal.type === 'personal') ? '👤 אישי' : '👥 קבוצתי'}</span>`;
+    html += `<span class="goal-pct">${pct}%</span>`;
+    if (goal.deadline) html += `<span class="goal-deadline">עד ${goal.deadline}</span>`;
+    html += '</div></div>';
 
-    if (!isCompleted && isGroup) {
-        html += `<button class="goal-contribute-btn" onclick="openContributeGoal('${goal.goal_id}','${goal.title}','${goal.unit}')">הוסיפי</button>`;
+    if (!isCompleted) {
+        html += `<button class="goal-contribute-btn" onclick="openContributeGoal('${goal.goal_id}','${goal.title.replace(/'/g,"\\'")}','${goal.unit || ''}')">הוסיפי</button>`;
     }
     html += '</div>';
     return html;
