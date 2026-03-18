@@ -19,7 +19,7 @@
     <div id="welcome-screen" class="welcome-screen" style="display:none">
         <div class="welcome-content">
             <!-- Welcome Emoji -->
-            <div class="welcome-emoji">🍊</div>
+            <div class="welcome-emoji" id="welcome-icon"></div>
 
             <h1 class="welcome-title">שיפטי</h1>
             <p class="welcome-subtitle">הדיאטנית החכמה שלך</p>
@@ -30,7 +30,7 @@
                     <input type="text" id="register-name" class="register-input" placeholder="איך קוראים לך?" autocomplete="given-name">
                 </div>
                 <button class="welcome-btn welcome-btn--primary" onclick="startNewAccount()">
-                    בואי נתחיל! 💪
+                    בואי נתחיל!
                 </button>
                 <div class="welcome-login-link" onclick="showLoginForm()">יש לי כבר קוד SHFT</div>
             </div>
@@ -367,7 +367,7 @@
                     </div>
                     <div id="progress-gallery" class="progress-gallery-grid"></div>
                     <div id="progress-compare-section" style="display:none">
-                        <button class="btn-secondary" onclick="startBeforeAfterCompare()">📊 השוואה לפני/אחרי</button>
+                        <button class="btn-secondary" onclick="startBeforeAfterCompare()"><span class="icon-inline" data-icon="barChart"></span> השוואה לפני/אחרי</button>
                     </div>
                 </div>
 
@@ -798,7 +798,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn-primary" onclick="submitCreateChallenge()">צרי אתגר 🎯</button>
+                    <button class="btn-primary" onclick="submitCreateChallenge()">צרי אתגר</button>
                 </div>
             </div>
         </div>
@@ -847,7 +847,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn-primary" onclick="submitCreateGoal()">צרי יעד 🎯</button>
+                    <button class="btn-primary" onclick="submitCreateGoal()">צרי יעד</button>
                 </div>
             </div>
         </div>

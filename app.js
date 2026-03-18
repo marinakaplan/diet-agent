@@ -2191,7 +2191,7 @@ function saveMeasurements() {
     measurements.sort((a, b) => a.date.localeCompare(b.date));
     setData('measurements', measurements);
     closeModal('measurements-modal');
-    showToast('המידות נשמרו ✓');
+    showToast('המידות נשמרו');
     addXP(XP_REWARDS.add_measurements, 'add_measurements');
     markTodayActive();
     checkAchievements();
@@ -2281,7 +2281,7 @@ async function saveBloodTests() {
     tests.sort((a, b) => a.date.localeCompare(b.date));
     setData('bloodTests', tests);
     closeModal('blood-modal');
-    showToast('בדיקות הדם נשמרו ✓');
+    showToast('בדיקות הדם נשמרו');
     addXP(XP_REWARDS.add_blood_test, 'add_blood_test');
     markTodayActive();
     checkAchievements();
@@ -3261,7 +3261,7 @@ function handleProgressPhoto(input) {
             };
             photos.push(photo);
             setData('progress_photos', photos);
-            showToast('תמונת התקדמות נשמרה ✓');
+            showToast('תמונת התקדמות נשמרה');
             renderProgressGallery();
             checkMonthlyPhotoPrompt();
         };
@@ -3435,6 +3435,15 @@ function resetCompare() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Replace data-icon placeholders with SVG icons
+    document.querySelectorAll('[data-icon]').forEach(el => {
+        const iconName = el.dataset.icon;
+        if (ICONS[iconName]) el.innerHTML = ICONS[iconName](el.dataset.iconSize || 16);
+    });
+    // Set welcome icon
+    const welcomeIcon = document.getElementById('welcome-icon');
+    if (welcomeIcon && ICONS.orange) welcomeIcon.innerHTML = ICONS.orange(48);
+
     // Register service worker
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').catch(() => {});

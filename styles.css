@@ -3,6 +3,10 @@
    Flat, clean, monochrome with minimal accents
    ============================================ */
 
+/* Icon system */
+.icon-inline { display: inline-flex; align-items: center; vertical-align: middle; }
+.icon-inline svg { display: block; }
+
 :root {
     /* Primary palette - Tropical Punch (subtle) */
     --primary: #069494;

@@ -93,11 +93,11 @@ async function syncToCloudWithUser() {
         // Full data sync via save endpoint
         await syncToCloud();
 
-        console.log('☁️ סונכרן לענן (משתמש)');
+        console.log(ICONS.cloud(14) + ' סונכרן לענן (משתמש)');
         localStorage.setItem('da__lastSyncTime', JSON.stringify(Date.now()));
         if (typeof updateSyncStatus === 'function') updateSyncStatus();
     } catch (err) {
-        console.log('⚠️ סנכרון נכשל:', err.message);
+        console.log(ICONS.warning(14) + ' סנכרון נכשל:', err.message);
         syncToCloud();
     }
 }
@@ -145,7 +145,7 @@ async function submitCreateGroup() {
         return;
     }
 
-    showLoading('יוצרת קבוצה... ⏳');
+    showLoading(ICONS.hourglass(14) + ' יוצרת קבוצה...');
     try {
         const resp = await fetch('/api/group?action=create', {
             method: 'POST',
@@ -246,7 +246,7 @@ async function submitJoinGroup() {
         return;
     }
 
-    showLoading('מצטרפת לקבוצה... ⏳');
+    showLoading(ICONS.hourglass(14) + ' מצטרפת לקבוצה...');
     try {
         const resp = await fetch('/api/group?action=join', {
             method: 'POST',
@@ -365,8 +365,8 @@ function getActivityIcon(type) {
         case 'achievement': return icon('trophy', 16);
         case 'streak': return icon('flame', 16);
         case 'exercise': return icon('heart', 16);
-        case 'challenge': return '<span style="font-size:16px">🎯</span>';
-        case 'goal': return '<span style="font-size:16px">✨</span>';
+        case 'challenge': return ICONS.target(16);
+        case 'goal': return ICONS.sparkle(16);
         default: return icon('star', 16);
     }
 }
@@ -397,14 +397,14 @@ function getActivityText(activity) {
             const d = activity.data || {};
             if (d.action === 'created') return `<strong>${name}</strong> יצרה אתגר חדש: ${d.title}`;
             if (d.action === 'joined') return `<strong>${name}</strong> הצטרפה לאתגר: ${d.title}`;
-            if (d.action === 'completed') return `🏆 <strong>${d.winnerName || name}</strong> ניצחה באתגר: ${d.title}!`;
+            if (d.action === 'completed') return ICONS.trophy(16) + ` <strong>${d.winnerName || name}</strong> ניצחה באתגר: ${d.title}!`;
             return `<strong>${name}</strong> עדכנה אתגר`;
         }
         case 'goal': {
             const d = activity.data || {};
             if (d.action === 'created') return `<strong>${name}</strong> הגדירה יעד: ${d.title}`;
             if (d.action === 'contributed') return `<strong>${name}</strong> תרמה ליעד: ${d.title}`;
-            if (d.action === 'completed') return `🎉 היעד הושלם: ${d.title}!`;
+            if (d.action === 'completed') return ICONS.party(14) + ` היעד הושלם: ${d.title}!`;
             return `<strong>${name}</strong> עדכנה יעד`;
         }
         default:
@@ -422,7 +422,7 @@ function getActivityCalories(activity) {
 function renderActivityFeed(activities) {
     if (!activities || activities.length === 0) {
         return `<div style="text-align:center; padding:32px 16px; color:var(--text-muted);">
-    <div style="font-size:40px; margin-bottom:12px; opacity:0.5;">💬</div>
+    <div style="font-size:40px; margin-bottom:12px; opacity:0.5;">${ICONS.messageCircle(32)}</div>
     <div style="font-weight:600; margin-bottom:4px; color:var(--text-secondary);">עדיין אין פעילות בקבוצה</div>
     <div style="font-size:0.82rem;">כשחברות ירשמו ארוחות או ישתו מים, זה יופיע כאן</div>
 </div>`;
@@ -475,11 +475,11 @@ function renderGroupSkeleton(count = 3) {
 
 function getChallengeTypeInfo(type) {
     const types = {
-        water: { icon: '\u{1F4A7}', label: '\u05E9\u05EA\u05D9\u05D9\u05EA \u05DE\u05D9\u05DD', color: '#069494', unit: '\u05DB\u05D5\u05E1\u05D5\u05EA' },
-        exercise_streak: { icon: '\u{1F525}', label: '\u05E8\u05E6\u05E3 \u05D0\u05D9\u05DE\u05D5\u05E0\u05D9\u05DD', color: '#EB5757', unit: '\u05D9\u05DE\u05D9\u05DD' },
-        weight_loss: { icon: '\u{1F4C9}', label: '\u05D9\u05E8\u05D9\u05D3\u05D4 \u05D1\u05DE\u05E9\u05E7\u05DC', color: '#6940A5', unit: '\u05E7"\u05D2' },
-        healthy_eating: { icon: '\u{1F957}', label: '\u05D0\u05D5\u05DB\u05DC \u05D1\u05E8\u05D9\u05D0', color: '#4DAB9A', unit: '\u05E6\u05D9\u05D5\u05DF' },
-        calories: { icon: '\u{1F3AF}', label: '\u05E9\u05DC\u05D9\u05D8\u05D4 \u05D1\u05E7\u05DC\u05D5\u05E8\u05D9\u05D5\u05EA', color: '#CB912F', unit: '\u05D9\u05DE\u05D9\u05DD' },
+        water: { icon: ICONS.droplet(16), label: '\u05E9\u05EA\u05D9\u05D9\u05EA \u05DE\u05D9\u05DD', color: '#069494', unit: '\u05DB\u05D5\u05E1\u05D5\u05EA' },
+        exercise_streak: { icon: ICONS.flame(16), label: '\u05E8\u05E6\u05E3 \u05D0\u05D9\u05DE\u05D5\u05E0\u05D9\u05DD', color: '#EB5757', unit: '\u05D9\u05DE\u05D9\u05DD' },
+        weight_loss: { icon: ICONS.trendingDown(16), label: '\u05D9\u05E8\u05D9\u05D3\u05D4 \u05D1\u05DE\u05E9\u05E7\u05DC', color: '#6940A5', unit: '\u05E7"\u05D2' },
+        healthy_eating: { icon: ICONS.salad(16), label: '\u05D0\u05D5\u05DB\u05DC \u05D1\u05E8\u05D9\u05D0', color: '#4DAB9A', unit: '\u05E6\u05D9\u05D5\u05DF' },
+        calories: { icon: ICONS.target(16), label: '\u05E9\u05DC\u05D9\u05D8\u05D4 \u05D1\u05E7\u05DC\u05D5\u05E8\u05D9\u05D5\u05EA', color: '#CB912F', unit: '\u05D9\u05DE\u05D9\u05DD' },
     };
     return types[type] || types.water;
 }
@@ -504,7 +504,7 @@ function refreshGroupsPage() {
                 <div class="groups-my-profile-meta">רמה ${myStats.level} · ${myStats.xp} XP · ${icon('flame', 14)} ${myStats.streak} ימים</div>
             </div>
             ${friendCode ? `
-                <div class="groups-my-profile-code" onclick="navigator.clipboard.writeText('${friendCode}'); showToast('הקוד הועתק! 📋'); this.classList.add('copied'); setTimeout(()=>this.classList.remove('copied'),1500);">
+                <div class="groups-my-profile-code" onclick="navigator.clipboard.writeText('${friendCode}'); showToast(ICONS.clipboard(14) + ' הקוד הועתק!'); this.classList.add('copied'); setTimeout(()=>this.classList.remove('copied'),1500);">
                     <span class="groups-code-label">הקוד שלי</span>
                     <span class="groups-code-value">${friendCode}</span>
                 </div>
@@ -533,7 +533,7 @@ function refreshGroupsPage() {
             <div style="position:absolute; width:120px; height:120px; border-radius:50%; background:var(--primary); opacity:0.12; animation:emptyPulse 3s ease-in-out infinite;"></div>
             <div style="position:absolute; width:80px; height:80px; top:20px; left:20px; border-radius:50%; background:var(--primary); opacity:0.18; animation:emptyPulse 3s ease-in-out 0.5s infinite;"></div>
             <div style="position:absolute; width:50px; height:50px; top:35px; left:35px; border-radius:50%; background:var(--primary); opacity:0.25; animation:emptyPulse 3s ease-in-out 1s infinite;"></div>
-            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:48px; z-index:1;">👯‍♀️</div>
+            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:1;">${ICONS.dancers(32)}</div>
         </div>
         <div style="font-size:1.2rem; font-weight:700; color:var(--text); margin-bottom:8px;">יותר כיף ביחד!</div>
         <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.5; margin-bottom:24px;">הצטרפי לקבוצה עם חברות<br>ותתחילו לעודד אחת את השנייה</div>
@@ -630,7 +630,7 @@ async function loadGroupDetail(groupId) {
                 ${icon('clock', 14)} פיד
             </button>
             <button class="group-tab ${activeTab === 'challenges' ? 'group-tab--active' : ''}" onclick="event.stopPropagation(); switchGroupTab('${groupId}', 'challenges')">
-                🎯 אתגרים
+                ${ICONS.target(14)} אתגרים
             </button>
             <button class="group-tab ${activeTab === 'leaderboard' ? 'group-tab--active' : ''}" onclick="event.stopPropagation(); switchGroupTab('${groupId}', 'leaderboard')">
                 ${icon('trophy', 14)} לידרבורד
@@ -680,7 +680,7 @@ async function loadGroupDetail(groupId) {
             <div class="lb-member ${isMe ? 'lb-member--me' : ''}" onclick="event.stopPropagation(); toggleMemberDetail(this)">
                 <span class="lb-member-rank">${rankDisplay}</span>
                 <div class="lb-member-avatar-wrap">
-                    <span class="lb-member-avatar">${r.levelEmoji || '🌱'}</span>
+                    <span class="lb-member-avatar">${r.levelEmoji || ICONS.seedling(20)}</span>
                     ${isActive ? '<span class="lb-member-active-dot"></span>' : ''}
                 </div>
                 <div class="lb-member-main">
@@ -828,7 +828,7 @@ function renderChallengesTab(groupId, challenges, goals) {
     // Challenges section
     html += '<div class="challenges-section">';
     html += '<div class="challenges-section-header">';
-    html += '<span class="challenges-section-title">🏆 אתגרים</span>';
+    html += '<span class="challenges-section-title">' + ICONS.trophy(16) + ' אתגרים</span>';
     html += `<button class="challenge-create-btn" onclick="openCreateChallenge('${groupId}')">+ צרי אתגר</button>`;
     html += '</div>';
 
@@ -837,7 +837,7 @@ function renderChallengesTab(groupId, challenges, goals) {
 
     if (activeChallenges.length === 0 && completedChallenges.length === 0) {
         html += `<div class="challenges-empty" style="text-align:center; padding:28px 16px;">
-            <div style="font-size:40px; margin-bottom:10px;">🏆</div>
+            <div style="margin-bottom:10px;">${ICONS.trophy(32)}</div>
             <div style="font-weight:600; color:var(--text-secondary); margin-bottom:4px;">אין אתגרים עדיין</div>
             <div style="font-size:0.82rem; color:var(--text-muted);">צרי אתגר ראשון ותתחילו להתחרות!</div>
         </div>`;
@@ -850,7 +850,7 @@ function renderChallengesTab(groupId, challenges, goals) {
     // Goals section
     html += '<div class="challenges-section">';
     html += '<div class="challenges-section-header">';
-    html += '<span class="challenges-section-title">🎯 יעדים</span>';
+    html += '<span class="challenges-section-title">' + ICONS.target(16) + ' יעדים</span>';
     html += `<button class="challenge-create-btn" onclick="openCreateGoal('${groupId}')">+ הגדירי יעד</button>`;
     html += '</div>';
 
@@ -859,7 +859,7 @@ function renderChallengesTab(groupId, challenges, goals) {
 
     if (activeGoals.length === 0 && completedGoals.length === 0) {
         html += `<div class="goals-empty" style="text-align:center; padding:28px 16px;">
-            <div style="font-size:40px; margin-bottom:10px;">🎯</div>
+            <div style="margin-bottom:10px;">${ICONS.target(32)}</div>
             <div style="font-weight:600; color:var(--text-secondary); margin-bottom:4px;">אין יעדים עדיין</div>
             <div style="font-size:0.82rem; color:var(--text-muted);">הגדירי יעד ראשון והתחילו לעבוד ביחד!</div>
         </div>`;
@@ -923,19 +923,19 @@ function renderChallengeCard(challenge, myUserId) {
 
     // Join button
     if (!isCompleted && !isJoined) {
-        html += `<button class="challenge-join-btn" onclick="joinChallenge('${challenge.challenge_id}')">הצטרפי לאתגר! 💪</button>`;
+        html += `<button class="challenge-join-btn" onclick="joinChallenge('${challenge.challenge_id}')">${ICONS.muscle(14)} הצטרפי לאתגר!</button>`;
     }
 
     // Winner banner
     if (isCompleted && challenge.winner_name) {
-        html += `<div class="challenge-winner-banner">🏆 ${challenge.winner_name} ניצחה!</div>`;
+        html += `<div class="challenge-winner-banner">${ICONS.trophy(16)} ${challenge.winner_name} ניצחה!</div>`;
 
         // Celebration for current user
         if (challenge.winner_user_id === myUserId && !_celebratedChallenges[challenge.challenge_id]) {
             _celebratedChallenges[challenge.challenge_id] = true;
             setTimeout(() => {
                 if (typeof launchConfetti === 'function') launchConfetti();
-                showToast('ניצחת באתגר! 🏆 +100 XP');
+                showToast(ICONS.trophy(14) + ' ניצחת באתגר! +100 XP');
             }, 500);
         }
     }
@@ -951,11 +951,11 @@ function renderGoalCard(goal, myUserId) {
 
     let html = `<div class="goal-card ${isCompleted ? 'goal-card--completed' : ''}">`;
     html += '<div class="goal-info" style="flex:1;">';
-    html += `<div class="goal-title">${isCompleted ? '✅ ' : '🎯 '}${goal.title}</div>`;
+    html += `<div class="goal-title">${isCompleted ? ICONS.checkCircle(16) + ' ' : ICONS.target(16) + ' '}${goal.title}</div>`;
     html += `<div class="goal-progress-text">${goal.current_value || 0} / ${goal.target_value} ${goal.unit || ''}</div>`;
     html += `<div class="goal-bar-container"><div class="goal-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>`;
     html += '<div class="goal-card-footer">';
-    html += `<span class="goal-type-badge goal-type-badge--${goal.type || 'group'}">${(goal.type === 'personal') ? '👤 אישי' : '👥 קבוצתי'}</span>`;
+    html += `<span class="goal-type-badge goal-type-badge--${goal.type || 'group'}">${(goal.type === 'personal') ? icon('user', 14) + ' אישי' : icon('users', 14) + ' קבוצתי'}</span>`;
     html += `<span class="goal-pct">${pct}%</span>`;
     if (goal.deadline) html += `<span class="goal-deadline">עד ${goal.deadline}</span>`;
     html += '</div></div>';
@@ -997,7 +997,7 @@ async function submitCreateChallenge() {
             })
         });
         if (resp.ok) {
-            showToast('האתגר נוצר! 🎯');
+            showToast(ICONS.target(14) + ' האתגר נוצר!');
             loadChallengesAndGoals(_activeCreateGroupId);
         } else {
             showToast('שגיאה ביצירת אתגר');
@@ -1014,7 +1014,7 @@ async function joinChallenge(challengeId) {
             body: JSON.stringify({ userId, challengeId })
         });
         if (resp.ok) {
-            showToast('הצטרפת לאתגר! 💪');
+            showToast(ICONS.muscle(14) + ' הצטרפת לאתגר!');
             // Reload current group challenges
             if (_activeGroupView) loadChallengesAndGoals(_activeGroupView);
         } else {
@@ -1064,7 +1064,7 @@ async function submitCreateGoal() {
             })
         });
         if (resp.ok) {
-            showToast('היעד נוצר! ✨');
+            showToast(ICONS.sparkle(14) + ' היעד נוצר!');
             loadChallengesAndGoals(_activeCreateGroupId);
         } else {
             showToast('שגיאה ביצירת יעד');
@@ -1098,10 +1098,10 @@ async function submitContributeGoal() {
         if (resp.ok) {
             const data = await resp.json();
             if (data.goal && data.goal.status === 'completed') {
-                showToast('היעד הושלם! 🎉');
+                showToast(ICONS.party(14) + ' היעד הושלם!');
                 if (typeof launchConfetti === 'function') launchConfetti();
             } else {
-                showToast('התרומה נוספה! 👏');
+                showToast(ICONS.party(14) + ' התרומה נוספה!');
             }
             if (_activeGroupView) loadChallengesAndGoals(_activeGroupView);
         }

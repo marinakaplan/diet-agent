@@ -20,16 +20,16 @@ const XP_REWARDS = {
 };
 
 const LEVELS = [
-    { level: 1,  name: 'מתחילה',         emoji: '🌱', xpRequired: 0,    avatar: '🌱', avatarColor: '#4DAB9A' },
-    { level: 2,  name: 'מתעוררת',        emoji: '🌿', xpRequired: 100,  avatar: '🌿', avatarColor: '#529CCA' },
-    { level: 3,  name: 'צומחת',          emoji: '🌻', xpRequired: 300,  avatar: '🌻', avatarColor: '#CB912F' },
-    { level: 4,  name: 'מתקדמת',         emoji: '⭐', xpRequired: 600,  avatar: '⭐', avatarColor: '#6940A5' },
-    { level: 5,  name: 'מנצנצת',         emoji: '💫', xpRequired: 1000, avatar: '💫', avatarColor: '#069494' },
-    { level: 6,  name: 'בוערת',          emoji: '🔥', xpRequired: 1500, avatar: '🔥', avatarColor: '#EB5757' },
-    { level: 7,  name: 'יהלום',          emoji: '💎', xpRequired: 2200, avatar: '💎', avatarColor: '#529CCA' },
-    { level: 8,  name: 'מלכת הבריאות',   emoji: '👑', xpRequired: 3000, avatar: '👑', avatarColor: '#CB912F' },
-    { level: 9,  name: 'גיבורת-על',      emoji: '🦸‍♀️', xpRequired: 4000, avatar: '🦸‍♀️', avatarColor: '#6940A5' },
-    { level: 10, name: 'אלופת העולם',    emoji: '🏆', xpRequired: 5500, avatar: '🏆', avatarColor: '#FFD700' }
+    { level: 1,  name: 'מתחילה',         emoji: ICONS.seedling(16), xpRequired: 0,    avatar: ICONS.seedling(16), avatarColor: '#4DAB9A' },
+    { level: 2,  name: 'מתעוררת',        emoji: ICONS.leaf(16), xpRequired: 100,  avatar: ICONS.leaf(16), avatarColor: '#529CCA' },
+    { level: 3,  name: 'צומחת',          emoji: ICONS.flower(16), xpRequired: 300,  avatar: ICONS.flower(16), avatarColor: '#CB912F' },
+    { level: 4,  name: 'מתקדמת',         emoji: ICONS.star(16), xpRequired: 600,  avatar: ICONS.star(16), avatarColor: '#6940A5' },
+    { level: 5,  name: 'מנצנצת',         emoji: ICONS.sparkle(16), xpRequired: 1000, avatar: ICONS.sparkle(16), avatarColor: '#069494' },
+    { level: 6,  name: 'בוערת',          emoji: ICONS.flame(16), xpRequired: 1500, avatar: ICONS.flame(16), avatarColor: '#EB5757' },
+    { level: 7,  name: 'יהלום',          emoji: ICONS.gem(16), xpRequired: 2200, avatar: ICONS.gem(16), avatarColor: '#529CCA' },
+    { level: 8,  name: 'מלכת הבריאות',   emoji: ICONS.crown(16), xpRequired: 3000, avatar: ICONS.crown(16), avatarColor: '#CB912F' },
+    { level: 9,  name: 'גיבורת-על',      emoji: ICONS.shield(16), xpRequired: 4000, avatar: ICONS.shield(16), avatarColor: '#6940A5' },
+    { level: 10, name: 'אלופת העולם',    emoji: ICONS.trophy(16), xpRequired: 5500, avatar: ICONS.trophy(16), avatarColor: '#FFD700' }
 ];
 
 // ============ Tips Library ============
@@ -282,7 +282,7 @@ function addWaterCup() {
     let cups = getData(key, 0);
 
     if (cups >= 20) {
-        showToast('וואו, 20 כוסות! שתית מספיק להיום 💧');
+        showToast('וואו, 20 כוסות! שתית מספיק להיום ' + ICONS.droplet(16));
         return cups;
     }
 
@@ -333,7 +333,7 @@ const ACHIEVEMENTS = [
     {
         id: 'first_meal',
         name: 'ביצה טריה',
-        emoji: '🥚',
+        emoji: ICONS.egg(16),
         description: 'תיעדת ארוחה ראשונה',
         check: function() {
             // Check if any meals exist across any day
@@ -350,7 +350,7 @@ const ACHIEVEMENTS = [
     {
         id: 'three_day_streak',
         name: 'שלושה ברצף',
-        emoji: '🔥',
+        emoji: ICONS.flame(16),
         description: '3 ימים רצופים של מעקב',
         check: function() {
             return getStreak() >= 3;
@@ -359,7 +359,7 @@ const ACHIEVEMENTS = [
     {
         id: 'week_streak',
         name: 'שבוע על אש',
-        emoji: '🔥',
+        emoji: ICONS.flame(16),
         description: '7 ימים רצופים',
         check: function() {
             return getStreak() >= 7;
@@ -368,7 +368,7 @@ const ACHIEVEMENTS = [
     {
         id: 'month_streak',
         name: 'חודש של מחויבות',
-        emoji: '💪',
+        emoji: ICONS.muscle(16),
         description: '30 ימים רצופים',
         check: function() {
             return getStreak() >= 30;
@@ -377,7 +377,7 @@ const ACHIEVEMENTS = [
     {
         id: 'first_weigh',
         name: 'שקילה ראשונה',
-        emoji: '⚖️',
+        emoji: ICONS.scale(16),
         description: 'שקלת את עצמך בפעם הראשונה',
         check: function() {
             const weights = getData('weights', []);
@@ -387,7 +387,7 @@ const ACHIEVEMENTS = [
     {
         id: 'first_kg_lost',
         name: 'קילו ראשון',
-        emoji: '📉',
+        emoji: ICONS.trendingDown(16),
         description: 'ירדת קילו ראשון',
         check: function() {
             const weights = getData('weights', []);
@@ -401,7 +401,7 @@ const ACHIEVEMENTS = [
     {
         id: 'five_kg_lost',
         name: '5 קילו!',
-        emoji: '🎉',
+        emoji: ICONS.party(16),
         description: 'ירדת 5 קילו',
         check: function() {
             const weights = getData('weights', []);
@@ -415,7 +415,7 @@ const ACHIEVEMENTS = [
     {
         id: 'ten_kg_lost',
         name: '10 קילו!',
-        emoji: '🏅',
+        emoji: ICONS.medal(16),
         description: 'ירדת 10 קילו',
         check: function() {
             const weights = getData('weights', []);
@@ -429,7 +429,7 @@ const ACHIEVEMENTS = [
     {
         id: 'first_blood_test',
         name: 'בדיקה ראשונה',
-        emoji: '🩸',
+        emoji: ICONS.blood(16),
         description: 'הוספת בדיקת דם',
         check: function() {
             const tests = getData('bloodTests', []);
@@ -439,7 +439,7 @@ const ACHIEVEMENTS = [
     {
         id: 'hydration_master',
         name: 'מלכת המים',
-        emoji: '💧',
+        emoji: ICONS.droplet(16),
         description: 'שתית 8 כוסות ביום',
         check: function() {
             return getWaterToday() >= 8;
@@ -448,7 +448,7 @@ const ACHIEVEMENTS = [
     {
         id: 'perfect_day',
         name: 'יום מושלם',
-        emoji: '🎯',
+        emoji: ICONS.target(16),
         description: 'עמדת ביעד הקלוריות',
         check: function() {
             const today = getTodayKey();
@@ -464,7 +464,7 @@ const ACHIEVEMENTS = [
     {
         id: 'week_logging',
         name: 'שבוע מעקב',
-        emoji: '📊',
+        emoji: ICONS.barChart(16),
         description: 'תיעדת ארוחות 7 ימים',
         check: function() {
             let daysWithMeals = 0;
@@ -479,7 +479,7 @@ const ACHIEVEMENTS = [
     {
         id: 'protein_queen',
         name: 'מלכת החלבון',
-        emoji: '💪',
+        emoji: ICONS.muscle(16),
         description: 'עמדת ביעד החלבון 5 ימים',
         check: function() {
             const profile = getData('profile', {});
@@ -497,7 +497,7 @@ const ACHIEVEMENTS = [
     {
         id: 'early_bird',
         name: 'מקדימה',
-        emoji: '🌅',
+        emoji: ICONS.sunrise(16),
         description: 'תיעדת ארוחת בוקר 5 ימים',
         check: function() {
             let breakfastDays = 0;
@@ -513,7 +513,7 @@ const ACHIEVEMENTS = [
     {
         id: 'chat_fan',
         name: 'חברה של AI',
-        emoji: '💬',
+        emoji: ICONS.messageCircle(16),
         description: 'דיברת עם הדיאטנית 10 פעמים',
         check: function() {
             const chatCount = getData('game_chat_count', 0);
@@ -524,7 +524,7 @@ const ACHIEVEMENTS = [
     {
         id: 'social_first_group',
         name: 'חברותית',
-        emoji: '👯',
+        emoji: ICONS.dancers(16),
         description: 'הצטרפת או יצרת קבוצה ראשונה',
         check: function() {
             const groups = getData('myGroups', []);
@@ -534,7 +534,7 @@ const ACHIEVEMENTS = [
     {
         id: 'social_group_creator',
         name: 'מנהיגה',
-        emoji: '👑',
+        emoji: ICONS.crown(16),
         description: 'יצרת קבוצה והזמנת חברות',
         check: function() {
             const groups = getData('myGroups', []);
@@ -544,7 +544,7 @@ const ACHIEVEMENTS = [
     {
         id: 'social_two_groups',
         name: 'רב-קבוצתית',
-        emoji: '🌐',
+        emoji: ICONS.globe(16),
         description: 'חברה ב-2 קבוצות לפחות',
         check: function() {
             const groups = getData('myGroups', []);
@@ -554,7 +554,7 @@ const ACHIEVEMENTS = [
     {
         id: 'social_streak_share',
         name: 'מלכת הרצף',
-        emoji: '🔗',
+        emoji: ICONS.link(16),
         description: 'רצף של 7 ימים בזמן שאת בקבוצה',
         check: function() {
             const groups = getData('myGroups', []);
@@ -564,7 +564,7 @@ const ACHIEVEMENTS = [
     {
         id: 'social_water_champ',
         name: 'שתיינית חברתית',
-        emoji: '🏊',
+        emoji: ICONS.swim(16),
         description: 'השלמת יעד מים כשאת בקבוצה',
         check: function() {
             const groups = getData('myGroups', []);
@@ -574,7 +574,7 @@ const ACHIEVEMENTS = [
     {
         id: 'social_first_challenge',
         name: 'מאתגרת',
-        emoji: '🎯',
+        emoji: ICONS.target(16),
         description: 'הצטרפת לאתגר קבוצתי ראשון',
         check: function() {
             return getData('game_challenges_joined', 0) >= 1;
@@ -583,7 +583,7 @@ const ACHIEVEMENTS = [
     {
         id: 'social_challenge_winner',
         name: 'אלופת האתגרים',
-        emoji: '🏆',
+        emoji: ICONS.trophy(16),
         description: 'ניצחת באתגר קבוצתי',
         check: function() {
             return getData('game_challenges_won', 0) >= 1;
@@ -592,7 +592,7 @@ const ACHIEVEMENTS = [
     {
         id: 'social_goal_crusher',
         name: 'שוברת יעדים',
-        emoji: '💥',
+        emoji: ICONS.explosion(16),
         description: 'השלמת יעד קבוצתי',
         check: function() {
             return getData('game_goals_completed', 0) >= 1;
@@ -680,7 +680,7 @@ function _generateChallengePool() {
         {
             id: 'water_8',
             text: 'שתי 8 כוסות מים',
-            emoji: '💧',
+            emoji: ICONS.droplet(16),
             target: 8,
             current: 0,
             completed: false,
@@ -689,7 +689,7 @@ function _generateChallengePool() {
         {
             id: 'log_3_meals',
             text: 'תעדי 3 ארוחות היום',
-            emoji: '🍽️',
+            emoji: ICONS.utensils(16),
             target: 3,
             current: 0,
             completed: false,
@@ -701,7 +701,7 @@ function _generateChallengePool() {
         {
             id: 'calorie_target',
             text: 'עמדי ביעד הקלוריות',
-            emoji: '🎯',
+            emoji: ICONS.target(16),
             target: 1,
             current: 0,
             completed: false,
@@ -718,7 +718,7 @@ function _generateChallengePool() {
         {
             id: 'weigh_in',
             text: 'הוסיפי שקילה היום',
-            emoji: '⚖️',
+            emoji: ICONS.scale(16),
             target: 1,
             current: 0,
             completed: false,
@@ -731,7 +731,7 @@ function _generateChallengePool() {
         {
             id: 'chat_ai',
             text: 'דברי עם הדיאטנית AI',
-            emoji: '🤖',
+            emoji: ICONS.robot(16),
             target: 1,
             current: 0,
             completed: false,
@@ -743,7 +743,7 @@ function _generateChallengePool() {
         {
             id: 'protein_60',
             text: 'אכלי לפחות 60 גרם חלבון',
-            emoji: '💪',
+            emoji: ICONS.muscle(16),
             target: 60,
             current: 0,
             completed: false,
@@ -988,20 +988,11 @@ function _refreshWaterUI() {
 function renderDailyChallenges() {
     const challenges = getDailyChallenges();
 
-    const challengeEmojiMap = {
-        '💧': 'droplet',
-        '🍽️': 'utensils',
-        '🎯': 'target',
-        '⚖️': 'scale',
-        '🤖': 'messageCircle',
-        '💪': 'zap'
-    };
-
     let challengesHTML = '';
     for (const c of challenges) {
         const progressPercent = Math.min(100, Math.round((c.current / c.target) * 100));
         const statusIcon = c.completed ? icon('check', 16) : '<span class="challenge-status-empty"></span>';
-        const challengeIcon = challengeEmojiMap[c.emoji] ? icon(challengeEmojiMap[c.emoji], 16) : c.emoji;
+        const challengeIcon = c.emoji;
         const itemClass = c.completed ? 'challenge-item challenge-item--completed' : 'challenge-item';
         const textClass = c.completed ? 'challenge-text challenge-text--completed' : 'challenge-text';
         const fillClass = c.completed ? 'challenge-progress-fill challenge-progress-fill--done' : 'challenge-progress-fill challenge-progress-fill--active';
