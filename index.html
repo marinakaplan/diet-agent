@@ -796,75 +796,18 @@
                             <option value="30">חודש</option>
                         </select>
                     </div>
+                    <div class="form-group">
+                        <label>העזה למפסידה 🎲</label>
+                        <textarea id="input-challenge-dare" placeholder="מה המפסידה תצטרך לעשות? למשל: לפרסם סטורי עם ירקות, 20 סקוואטים בלייב..." maxlength="120" rows="2" style="resize:none"></textarea>
+                        <div class="dare-suggestions">
+                            <span class="dare-chip" onclick="document.getElementById('input-challenge-dare').value=this.textContent">לפרסם סטורי ירקות 🥦</span>
+                            <span class="dare-chip" onclick="document.getElementById('input-challenge-dare').value=this.textContent">20 סקוואטים בלייב 🏋️</span>
+                            <span class="dare-chip" onclick="document.getElementById('input-challenge-dare').value=this.textContent">ארוחה בריאה לכולן 🥗</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn-primary" onclick="submitCreateChallenge()">צרי אתגר</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Create Goal Modal -->
-        <div class="modal-overlay" id="create-goal-modal" onclick="closeModalOverlay(event)">
-            <div class="modal">
-                <div class="modal-header">
-                    <h3>הגדירי יעד</h3>
-                    <button class="modal-close" onclick="closeModal('create-goal-modal')">&#10005;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label>סוג יעד</label>
-                        <select id="input-goal-type" class="form-select">
-                            <option value="group">🎯 יעד קבוצתי - כולנו ביחד</option>
-                            <option value="personal">👤 יעד אישי - בתוך הקבוצה</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>קטגוריה</label>
-                        <select id="input-goal-category" class="form-select">
-                            <option value="water">💧 שתיית מים</option>
-                            <option value="exercise">🏃 אימונים</option>
-                            <option value="weight">⚖️ משקל</option>
-                            <option value="custom">✏️ מותאם אישית</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>שם היעד</label>
-                        <input type="text" id="input-goal-title" placeholder="למשל: 100 כוסות מים השבוע" maxlength="60">
-                    </div>
-                    <div class="form-group" style="display:flex;gap:8px;">
-                        <div style="flex:2">
-                            <label>יעד</label>
-                            <input type="number" id="input-goal-target" placeholder="100" min="1" inputmode="numeric">
-                        </div>
-                        <div style="flex:1">
-                            <label>יחידה</label>
-                            <input type="text" id="input-goal-unit" placeholder="כוסות" maxlength="15">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>תאריך יעד (אופציונלי)</label>
-                        <input type="date" id="input-goal-deadline">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn-primary" onclick="submitCreateGoal()">צרי יעד</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Contribute to Goal Modal -->
-        <div class="modal-overlay" id="contribute-goal-modal" onclick="closeModalOverlay(event)">
-            <div class="modal" style="max-width:320px">
-                <div class="modal-header">
-                    <h3>הוסיפי תרומה</h3>
-                    <button class="modal-close" onclick="closeModal('contribute-goal-modal')">&#10005;</button>
-                </div>
-                <div class="modal-body">
-                    <p id="contribute-goal-text" style="margin-bottom:12px;color:var(--text-secondary)"></p>
-                    <input type="number" id="input-contribute-amount" placeholder="כמות" min="1" inputmode="numeric" style="font-size:1.2rem;text-align:center;">
-                </div>
-                <div class="modal-footer">
-                    <button class="btn-primary" onclick="submitContributeGoal()">הוסיפי ➕</button>
                 </div>
             </div>
         </div>

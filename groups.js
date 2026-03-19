@@ -461,7 +461,6 @@ let _groupDataCache = {}; // Cache loaded leaderboard data
 let _activeGroupTab = {}; // Track active tab per group: 'leaderboard' or 'feed'
 let _activityCache = {}; // Cache loaded activity feeds
 let _challengeCache = {};
-let _goalCache = {};
 let _celebratedChallenges = {};
 let _activeCreateGroupId = null;  // tracks which group the create modals are for
 
@@ -660,7 +659,7 @@ async function loadGroupDetail(groupId) {
     if (activeTab === 'challenges') {
         html += '<div id="challenges-container-' + groupId + '"><div style="text-align:center;padding:20px;color:var(--text-muted)">טוען אתגרים...</div></div>';
         // Load after render
-        setTimeout(() => loadChallengesAndGoals(groupId), 100);
+        setTimeout(() => loadChallenges(groupId), 100);
     }
 
     // Leaderboard Tab
@@ -737,7 +736,6 @@ async function switchGroupTab(groupId, tab) {
     if (tab === 'feed') delete _activityCache[groupId];
     if (tab === 'challenges') {
         delete _challengeCache[groupId];
-        delete _goalCache[groupId];
     }
     await loadGroupDetail(groupId);
 }
@@ -789,18 +787,14 @@ async function doLeaveGroup(groupId) {
     }
 }
 
-// ============ Challenges & Goals ============
-async function loadChallengesAndGoals(groupId) {
+// ============ Challenges ============
+async function loadChallenges(groupId) {
     const container = document.getElementById('challenges-container-' + groupId);
     if (!container) return;
 
     try {
-        const [chRes, glRes] = await Promise.all([
-            fetch('/api/group?action=challenge-progress&groupId=' + groupId),
-            fetch('/api/group?action=goal-progress&groupId=' + groupId)
-        ]);
+        const chRes = await fetch('/api/group?action=challenge-progress&groupId=' + groupId);
         const challenges = chRes.ok ? (await chRes.json()).challenges || [] : [];
-        const goals = glRes.ok ? (await glRes.json()).goals || [] : [];
 
         // Auto-complete expired challenges
         const today = getTodayKey();
@@ -815,22 +809,18 @@ async function loadChallengesAndGoals(groupId) {
             }
         }
 
-        container.innerHTML = renderChallengesTab(groupId, challenges, goals);
+        container.innerHTML = renderChallengesTab(groupId, challenges);
     } catch(e) {
         container.innerHTML = '<div class="challenges-empty">שגיאה בטעינת אתגרים</div>';
     }
 }
 
-function renderChallengesTab(groupId, challenges, goals) {
+function renderChallengesTab(groupId, challenges) {
     const myUserId = localStorage.getItem('userId');
     let html = '';
 
     // Challenges section
     html += '<div class="challenges-section">';
-    html += '<div class="challenges-section-header">';
-    html += '<span class="challenges-section-title">' + ICONS.trophy(16) + ' אתגרים</span>';
-    html += `<button class="challenge-create-btn" onclick="openCreateChallenge('${groupId}')">+ צרי אתגר</button>`;
-    html += '</div>';
 
     const activeChallenges = challenges.filter(c => c.status === 'active');
     const completedChallenges = challenges.filter(c => c.status === 'completed');
@@ -839,7 +829,7 @@ function renderChallengesTab(groupId, challenges, goals) {
         html += `<div class="challenges-empty" style="text-align:center; padding:28px 16px;">
             <div style="margin-bottom:10px;">${ICONS.trophy(32)}</div>
             <div style="font-weight:600; color:var(--text-secondary); margin-bottom:4px;">אין אתגרים עדיין</div>
-            <div style="font-size:0.82rem; color:var(--text-muted);">צרי אתגר ראשון ותתחילו להתחרות!</div>
+            <div style="font-size:0.82rem; color:var(--text-muted);">לחצי + כדי ליצור אתגר ראשון!</div>
         </div>`;
     } else {
         activeChallenges.forEach(ch => { html += renderChallengeCard(ch, myUserId); });
@@ -847,27 +837,8 @@ function renderChallengesTab(groupId, challenges, goals) {
     }
     html += '</div>';
 
-    // Goals section
-    html += '<div class="challenges-section">';
-    html += '<div class="challenges-section-header">';
-    html += '<span class="challenges-section-title">' + ICONS.target(16) + ' יעדים</span>';
-    html += `<button class="challenge-create-btn" onclick="openCreateGoal('${groupId}')">+ הגדירי יעד</button>`;
-    html += '</div>';
-
-    const activeGoals = goals.filter(g => g.status === 'active');
-    const completedGoals = goals.filter(g => g.status === 'completed');
-
-    if (activeGoals.length === 0 && completedGoals.length === 0) {
-        html += `<div class="goals-empty" style="text-align:center; padding:28px 16px;">
-            <div style="margin-bottom:10px;">${ICONS.target(32)}</div>
-            <div style="font-weight:600; color:var(--text-secondary); margin-bottom:4px;">אין יעדים עדיין</div>
-            <div style="font-size:0.82rem; color:var(--text-muted);">הגדירי יעד ראשון והתחילו לעבוד ביחד!</div>
-        </div>`;
-    } else {
-        activeGoals.forEach(g => { html += renderGoalCard(g, myUserId); });
-        completedGoals.slice(0, 3).forEach(g => { html += renderGoalCard(g, myUserId); });
-    }
-    html += '</div>';
+    // FAB button
+    html += `<button class="challenges-fab" onclick="openCreateChallenge('${groupId}')" title="צרי אתגר חדש">+</button>`;
 
     return html;
 }
@@ -940,32 +911,21 @@ function renderChallengeCard(challenge, myUserId) {
         }
     }
 
-    html += '</div>';
-    return html;
-}
-
-function renderGoalCard(goal, myUserId) {
-    const isCompleted = goal.status === 'completed';
-    const pct = goal.target_value > 0 ? Math.min(100, Math.round((goal.current_value / goal.target_value) * 100)) : 0;
-    const barColor = isCompleted ? '#4DAB9A' : 'var(--primary)';
-
-    let html = `<div class="goal-card ${isCompleted ? 'goal-card--completed' : ''}">`;
-    html += '<div class="goal-info" style="flex:1;">';
-    html += `<div class="goal-title">${isCompleted ? ICONS.checkCircle(16) + ' ' : ICONS.target(16) + ' '}${goal.title}</div>`;
-    html += `<div class="goal-progress-text">${goal.current_value || 0} / ${goal.target_value} ${goal.unit || ''}</div>`;
-    html += `<div class="goal-bar-container"><div class="goal-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>`;
-    html += '<div class="goal-card-footer">';
-    html += `<span class="goal-type-badge goal-type-badge--${goal.type || 'group'}">${(goal.type === 'personal') ? icon('user', 14) + ' אישי' : icon('users', 14) + ' קבוצתי'}</span>`;
-    html += `<span class="goal-pct">${pct}%</span>`;
-    if (goal.deadline) html += `<span class="goal-deadline">עד ${goal.deadline}</span>`;
-    html += '</div></div>';
-
-    if (!isCompleted) {
-        html += `<button class="goal-contribute-btn" onclick="openContributeGoal('${goal.goal_id}','${goal.title.replace(/'/g,"\\'")}','${goal.unit || ''}')">הוסיפי</button>`;
+    // Dare banner for completed challenges with a dare
+    if (isCompleted && challenge.dare && sorted.length > 0) {
+        const loser = sorted[sorted.length - 1];
+        const loserName = loser.displayName || 'אנונימית';
+        html += `<div class="dare-banner">
+    <div class="dare-banner-label">העזה למפסידה</div>
+    <div class="dare-banner-name">${loserName}</div>
+    <div class="dare-banner-text">${challenge.dare}</div>
+</div>`;
     }
+
     html += '</div>';
     return html;
 }
+
 
 // ============ Challenge & Goal Actions ============
 function openCreateChallenge(groupId) {
@@ -978,6 +938,7 @@ async function submitCreateChallenge() {
     const typeNames = { water: 'אתגר שתייה', exercise_streak: 'אתגר אימונים', weight_loss: 'אתגר ירידה במשקל', healthy_eating: 'אתגר אכילה בריאה', calories: 'אתגר קלוריות' };
     const title = typeNames[type] || 'אתגר';
     const duration = parseInt(document.getElementById('input-challenge-duration').value);
+    const dare = document.getElementById('input-challenge-dare').value.trim();
     const userId = localStorage.getItem('userId');
     if (!_activeCreateGroupId) return;
 
@@ -993,12 +954,13 @@ async function submitCreateChallenge() {
                 groupId: _activeCreateGroupId,
                 type,
                 title,
-                durationDays: duration
+                durationDays: duration,
+                dare
             })
         });
         if (resp.ok) {
             showToast(ICONS.target(14) + ' האתגר נוצר!');
-            loadChallengesAndGoals(_activeCreateGroupId);
+            loadChallenges(_activeCreateGroupId);
         } else {
             showToast('שגיאה ביצירת אתגר');
         }
@@ -1016,7 +978,7 @@ async function joinChallenge(challengeId) {
         if (resp.ok) {
             showToast(ICONS.muscle(14) + ' הצטרפת לאתגר!');
             // Reload current group challenges
-            if (_activeGroupView) loadChallengesAndGoals(_activeGroupView);
+            if (_activeGroupView) loadChallenges(_activeGroupView);
         } else {
             const data = await resp.json().catch(() => ({}));
             showToast(data.error || 'שגיאה בהצטרפות');
@@ -1024,86 +986,3 @@ async function joinChallenge(challengeId) {
     } catch(e) { showToast('שגיאה בהצטרפות'); }
 }
 
-function openCreateGoal(groupId) {
-    _activeCreateGroupId = groupId;
-    document.getElementById('input-goal-title').value = '';
-    document.getElementById('input-goal-target').value = '';
-    document.getElementById('input-goal-unit').value = '';
-    document.getElementById('input-goal-deadline').value = '';
-    openModal('create-goal-modal');
-}
-
-async function submitCreateGoal() {
-    const type = document.getElementById('input-goal-type').value;
-    const category = document.getElementById('input-goal-category').value;
-    const title = document.getElementById('input-goal-title').value.trim();
-    const target = parseFloat(document.getElementById('input-goal-target').value);
-    const unit = document.getElementById('input-goal-unit').value.trim();
-    const deadline = document.getElementById('input-goal-deadline').value || null;
-    const userId = localStorage.getItem('userId');
-
-    if (!title || !target) { showToast('מלאי שם ויעד'); return; }
-    if (!_activeCreateGroupId) return;
-
-    closeModal('create-goal-modal');
-    showToast('יוצרת יעד...');
-
-    try {
-        const resp = await fetch('/api/group?action=goal-create', {
-            method: 'POST',
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({
-                userId,
-                groupId: _activeCreateGroupId,
-                type,
-                category,
-                title,
-                targetValue: target,
-                unit: unit || 'יח\'',
-                deadline
-            })
-        });
-        if (resp.ok) {
-            showToast(ICONS.sparkle(14) + ' היעד נוצר!');
-            loadChallengesAndGoals(_activeCreateGroupId);
-        } else {
-            showToast('שגיאה ביצירת יעד');
-        }
-    } catch(e) { showToast('שגיאה ביצירת יעד'); }
-}
-
-let _activeContributeGoalId = null;
-function openContributeGoal(goalId, title, unit) {
-    _activeContributeGoalId = goalId;
-    document.getElementById('contribute-goal-text').textContent = `כמה ${unit} להוסיף ל"${title}"?`;
-    document.getElementById('input-contribute-amount').value = '';
-    openModal('contribute-goal-modal');
-}
-
-async function submitContributeGoal() {
-    const amount = parseFloat(document.getElementById('input-contribute-amount').value);
-    const userId = localStorage.getItem('userId');
-
-    if (!amount || amount <= 0) { showToast('הכניסי כמות'); return; }
-    if (!_activeContributeGoalId) return;
-
-    closeModal('contribute-goal-modal');
-
-    try {
-        const resp = await fetch('/api/group?action=goal-progress', {
-            method: 'POST',
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ userId, goalId: _activeContributeGoalId, amount })
-        });
-        if (resp.ok) {
-            const data = await resp.json();
-            if (data.goal && data.goal.status === 'completed') {
-                showToast(ICONS.party(14) + ' היעד הושלם!');
-                if (typeof launchConfetti === 'function') launchConfetti();
-            } else {
-                showToast(ICONS.party(14) + ' התרומה נוספה!');
-            }
-            if (_activeGroupView) loadChallengesAndGoals(_activeGroupView);
-        }
-    } catch(e) { showToast('שגיאה'); }
-}

@@ -5310,3 +5310,82 @@ body {
     .group-actions { max-width: 400px; }
     .lb-member-detail-grid { grid-template-columns: repeat(4, 1fr); }
 }
+
+/* Dare suggestions chips */
+.dare-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+.dare-chip {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    background: var(--bg-warm);
+    border-radius: 20px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid rgba(0,0,0,0.06);
+}
+.dare-chip:hover, .dare-chip:active {
+    background: var(--primary-light);
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+/* Challenges FAB */
+.challenges-fab {
+    position: sticky;
+    bottom: 16px;
+    float: left;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    font-size: 24px;
+    font-weight: 300;
+    border: none;
+    box-shadow: 0 4px 14px rgba(6,148,148,0.35);
+    cursor: pointer;
+    z-index: 5;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 12px;
+}
+.challenges-fab:active {
+    transform: scale(0.9);
+    box-shadow: 0 2px 8px rgba(6,148,148,0.4);
+}
+
+/* Dare Banner on completed challenges */
+.dare-banner {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, #FFF0F3 0%, #FFE4EC 100%);
+    border-radius: 12px;
+    border: 1px solid rgba(235,87,87,0.15);
+    text-align: center;
+}
+.dare-banner-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #EB5757;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+.dare-banner-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+.dare-banner-text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}

@@ -408,7 +408,7 @@ async function handleChallengeCreate(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     try {
-        const { userId, groupId, type, title, durationDays } = req.body;
+        const { userId, groupId, type, title, durationDays, dare } = req.body;
         if (!userId || !groupId || !type || !title || !durationDays) {
             return res.status(400).json({ error: 'userId, groupId, type, title, and durationDays required' });
         }
@@ -440,7 +440,8 @@ async function handleChallengeCreate(req, res) {
             duration_days: durationDays,
             participants,
             status: 'active',
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            ...(dare ? { dare } : {})
         };
 
         const { error } = await db.from('group_challenges').insert(challenge);
@@ -572,11 +573,24 @@ async function handleChallengeComplete(req, res) {
             }
         }
 
+        // Find loser (participant with lowest progress) for dare
+        let loser = null;
+        if (challenge.dare && participants.length > 1) {
+            let minProgress = Infinity;
+            for (const p of participants) {
+                if ((p.progress || 0) < minProgress) {
+                    minProgress = p.progress || 0;
+                    loser = p;
+                }
+            }
+        }
+
         const updateData = {
             status: 'completed',
             participants,
             winner_user_id: winner?.userId || null,
-            winner_name: winner?.displayName || null
+            winner_name: winner?.displayName || null,
+            ...(loser ? { loser_user_id: loser.userId, loser_name: loser.displayName } : {})
         };
 
         const { error } = await db
@@ -586,13 +600,25 @@ async function handleChallengeComplete(req, res) {
 
         if (error) throw error;
 
-        await postGroupActivity(db, challenge.group_id, challenge.created_by, winner?.displayName || '', 'challenge', {
+        const activityData = {
             action: 'completed',
             title: challenge.title,
             winnerName: winner?.displayName || null
-        });
+        };
+        if (challenge.dare && loser) {
+            activityData.loser = loser.displayName;
+            activityData.dare = challenge.dare;
+        }
 
-        return res.status(200).json({ ...challenge, ...updateData });
+        await postGroupActivity(db, challenge.group_id, challenge.created_by, winner?.displayName || '', 'challenge', activityData);
+
+        const responseData = { ...challenge, ...updateData };
+        if (challenge.dare && loser) {
+            responseData.loser = loser.displayName;
+            responseData.dare = challenge.dare;
+        }
+
+        return res.status(200).json(responseData);
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }
