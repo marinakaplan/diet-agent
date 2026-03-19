@@ -432,7 +432,8 @@ async function handleChallengeCreate(req, res) {
         const challenge = {
             challenge_id: challengeId,
             group_id: groupId,
-            created_by: userId,
+            creator_user_id: userId,
+            creator_name: displayName,
             type,
             title,
             start_date,
@@ -440,7 +441,6 @@ async function handleChallengeCreate(req, res) {
             duration_days: durationDays,
             participants,
             status: 'active',
-            created_at: new Date().toISOString(),
             ...(dare ? { dare } : {})
         };
 
@@ -610,7 +610,7 @@ async function handleChallengeComplete(req, res) {
             activityData.dare = challenge.dare;
         }
 
-        await postGroupActivity(db, challenge.group_id, challenge.created_by, winner?.displayName || '', 'challenge', activityData);
+        await postGroupActivity(db, challenge.group_id, challenge.creator_user_id, winner?.displayName || '', 'challenge', activityData);
 
         const responseData = { ...challenge, ...updateData };
         if (challenge.dare && loser) {
@@ -644,7 +644,8 @@ async function handleGoalCreate(req, res) {
         const goal = {
             goal_id: goalId,
             group_id: groupId,
-            created_by: userId,
+            creator_user_id: userId,
+            creator_name: displayName,
             type: type || 'collective',
             category: category || 'general',
             title,
