@@ -825,7 +825,7 @@ function displayAnalysis(data) {
         detectedEl.innerHTML = `
             <div class="analysis-detected-row">
                 <div class="health-score-circle" style="background: ${scoreColor};" title="ציון בריאות: ${healthScore}/10">${healthScore}</div>
-                <span class="detected-food-name">${data.detected_food}</span>
+                <span class="detected-food-name" id="detected-food-text">${data.detected_food}</span>
                 <div class="portion-adjuster">
                     <button class="portion-btn" onclick="adjustPortions(-1)" title="פחות">${icon('minus', 16)}</button>
                     <span class="portion-count" id="portion-count">1</span>
@@ -833,10 +833,19 @@ function displayAnalysis(data) {
                 </div>
                 <button class="bookmark-btn${isFav ? ' bookmarked' : ''}" id="analysis-bookmark-btn" onclick="toggleFavorite()" title="שמרי למועדפים">${icon(isFav ? 'bookmarkFilled' : 'bookmark', 20)}</button>
             </div>
+            <button class="edit-detected-btn" onclick="editDetectedFood()" title="ערכי זיהוי">${icon('edit', 14)} לא מדויק? ערכי</button>
         `;
         detectedEl.classList.remove('hidden');
     } else {
-        detectedEl.classList.add('hidden');
+        // AI couldn't detect - show manual input
+        detectedEl.innerHTML = `
+            <div class="analysis-manual-input">
+                <div class="health-score-circle" style="background: var(--warning);" title="לא זוהה">?</div>
+                <input type="text" id="manual-food-name" class="manual-food-input" placeholder="לא הצלחתי לזהות — תכתבי מה זה..." dir="rtl">
+                <button class="manual-food-save" onclick="saveManualFoodName()">אישור</button>
+            </div>
+        `;
+        detectedEl.classList.remove('hidden');
     }
 
     const grid = document.getElementById('analysis-grid');
@@ -864,6 +873,58 @@ function adjustPortions(delta) {
             }
         });
     }
+}
+
+function editDetectedFood() {
+    const textEl = document.getElementById('detected-food-text');
+    if (!textEl) return;
+    const currentText = textEl.textContent;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = currentText;
+    input.className = 'edit-detected-input';
+    input.dir = 'rtl';
+    input.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+            const newName = input.value.trim();
+            if (newName) {
+                textEl.textContent = newName;
+                if (lastAnalysis) lastAnalysis.detected_food = newName;
+            }
+            input.replaceWith(textEl);
+            document.querySelector('.edit-detected-btn').style.display = 'none';
+        }
+        if (e.key === 'Escape') input.replaceWith(textEl);
+    };
+    textEl.replaceWith(input);
+    input.focus();
+    input.select();
+}
+
+function saveManualFoodName() {
+    const input = document.getElementById('manual-food-name');
+    const name = input ? input.value.trim() : '';
+    if (!name) {
+        showToast('כתבי מה אכלת');
+        return;
+    }
+    if (lastAnalysis) lastAnalysis.detected_food = name;
+    // Replace the manual input with the confirmed name
+    const detectedEl = document.getElementById('analysis-detected');
+    const isFav = lastAnalysis ? isMealFavorited(lastAnalysis) : false;
+    detectedEl.innerHTML = `
+        <div class="analysis-detected-row">
+            <div class="health-score-circle" style="background: var(--warning);">?</div>
+            <span class="detected-food-name" id="detected-food-text">${name}</span>
+            <div class="portion-adjuster">
+                <button class="portion-btn" onclick="adjustPortions(-1)" title="פחות">${icon('minus', 16)}</button>
+                <span class="portion-count" id="portion-count">1</span>
+                <button class="portion-btn" onclick="adjustPortions(1)" title="עוד">${icon('plus', 16)}</button>
+            </div>
+            <button class="bookmark-btn${isFav ? ' bookmarked' : ''}" id="analysis-bookmark-btn" onclick="toggleFavorite()" title="שמרי למועדפים">${icon(isFav ? 'bookmarkFilled' : 'bookmark', 20)}</button>
+        </div>
+    `;
+    showToast('שם הארוחה עודכן');
 }
 
 function isMealFavorited(data) {

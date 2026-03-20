@@ -973,21 +973,96 @@ body {
 }
 
 .btn-share-meal {
-    width: 32px;
-    height: 32px;
-    border: var(--border);
-    border-radius: var(--radius);
+    width: 36px;
+    height: 36px;
+    border: 1.5px solid var(--border-color, #e0e0e0);
+    border-radius: 50%;
     background: var(--bg);
-    font-size: 16px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.15s ease;
+    transition: all 0.15s ease;
+    color: var(--text-secondary, #666);
+    flex-shrink: 0;
+}
+
+.btn-share-meal:hover {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
 }
 
 .btn-share-meal:active {
-    background: var(--bg-warm);
+    transform: scale(0.92);
+}
+
+/* Edit detected food button */
+.edit-detected-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 4px 0;
+    margin-top: 4px;
+    opacity: 0.8;
+    transition: opacity 0.15s;
+}
+.edit-detected-btn:hover { opacity: 1; }
+
+.edit-detected-input {
+    flex: 1;
+    border: 1.5px solid var(--primary);
+    border-radius: var(--radius);
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    outline: none;
+    background: var(--bg);
+}
+
+/* Manual food name input (when AI can't detect) */
+.analysis-manual-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    direction: rtl;
+}
+
+.manual-food-input {
+    flex: 1;
+    border: 1.5px dashed var(--warning, #f0ad4e);
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    background: #fffdf5;
+    outline: none;
+    transition: border-color 0.15s;
+}
+.manual-food-input:focus {
+    border-color: var(--primary);
+    border-style: solid;
+}
+
+.manual-food-save {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    padding: 8px 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+}
+.manual-food-save:active {
+    background: var(--primary-dark);
 }
 
 .analysis-photo-preview {

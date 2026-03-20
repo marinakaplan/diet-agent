@@ -916,7 +916,7 @@ function renderChallengeCard(challenge, myUserId) {
         const loser = sorted[sorted.length - 1];
         const loserName = loser.displayName || 'אנונימית';
         html += `<div class="dare-banner">
-    <div class="dare-banner-label">העזה למפסידה</div>
+    <div class="dare-banner-label">המשימה למפסידה</div>
     <div class="dare-banner-name">${loserName}</div>
     <div class="dare-banner-text">${challenge.dare}</div>
 </div>`;
