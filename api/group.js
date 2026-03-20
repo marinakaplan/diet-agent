@@ -39,12 +39,22 @@ async function handleCreate(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     try {
-        const { userId, groupName } = req.body;
+        const { userId, groupName, displayName: reqDisplayName } = req.body;
         if (!userId || !groupName) return res.status(400).json({ error: 'userId and groupName required' });
 
         const db = getSupabase();
 
-        const { data: user } = await db.from('users').select('display_name').eq('user_id', userId).single();
+        // Check if user exists, if not — create them first (fixes foreign key constraint)
+        let { data: user } = await db.from('users').select('display_name').eq('user_id', userId).single();
+        if (!user) {
+            const fallbackName = reqDisplayName || 'ללא שם';
+            await db.from('users').upsert({
+                user_id: userId,
+                display_name: fallbackName,
+                created_at: new Date().toISOString()
+            }, { onConflict: 'user_id' });
+            user = { display_name: fallbackName };
+        }
         const displayName = user?.display_name || 'ללא שם';
 
         const groupId = generateGroupId();

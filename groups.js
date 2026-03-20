@@ -150,7 +150,7 @@ async function submitCreateGroup() {
         const resp = await fetch('/api/group?action=create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, groupName: groupName.trim() })
+            body: JSON.stringify({ userId, groupName: groupName.trim(), displayName: getData('displayName', 'ללא שם') })
         });
         const data = await resp.json();
         hideLoading();
