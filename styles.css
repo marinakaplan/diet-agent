@@ -2592,6 +2592,7 @@ body {
     align-items: flex-end;
     justify-content: center;
     z-index: 200;
+    -webkit-overflow-scrolling: touch;
 }
 
 .modal-overlay.active {
@@ -2693,6 +2694,10 @@ body {
 .modal-footer {
     padding: 20px 24px;
     border-top: var(--border);
+    padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
+    position: sticky;
+    bottom: 0;
+    background: var(--surface);
 }
 
 .btn-primary {

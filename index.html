@@ -740,7 +740,7 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label>שם הקבוצה</label>
-                        <input type="text" id="input-group-name" placeholder="למשל: חברות לדיאטה" maxlength="30">
+                        <input type="text" id="input-group-name" placeholder="למשל: חברות לדיאטה" maxlength="30" onkeydown="if(event.key==='Enter'){event.preventDefault();submitCreateGroup()}">
                     </div>
                 </div>
                 <div class="modal-footer">
