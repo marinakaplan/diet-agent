@@ -12,34 +12,30 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
-    <link rel="stylesheet" href="styles.css?v=31">
+    <link rel="stylesheet" href="styles.css?v=32">
 </head>
 <body>
     <!-- Welcome / Login Screen -->
     <div id="welcome-screen" class="welcome-screen" style="display:none">
         <div class="welcome-content">
-            <!-- Welcome Emoji -->
             <div class="welcome-emoji" id="welcome-icon"></div>
-
             <h1 class="welcome-title">שיפטי</h1>
             <p class="welcome-subtitle">הדיאטנית החכמה שלך</p>
 
-            <!-- Register - shown by default -->
             <div id="welcome-main" class="welcome-main">
                 <div class="register-field">
-                    <input type="text" id="register-name" class="register-input" placeholder="איך קוראים לך?" autocomplete="given-name">
+                    <input type="text" id="auth-name" class="register-input" placeholder="איך קוראים לך? (לכניסה ראשונה)" autocomplete="given-name">
                 </div>
-                <button class="welcome-btn welcome-btn--primary" onclick="startNewAccount()">
-                    בואי נתחיל!
+                <div class="register-field">
+                    <input type="tel" id="auth-id" class="login-input" placeholder="תעודת זהות (9 ספרות)" dir="ltr" inputmode="numeric" autocomplete="off" maxlength="9">
+                </div>
+                <div class="register-field">
+                    <input type="tel" id="auth-pin" class="login-input" placeholder="קוד אישי (4 ספרות)" dir="ltr" inputmode="numeric" autocomplete="off" maxlength="4">
+                </div>
+                <button class="welcome-btn welcome-btn--primary" onclick="loginWithNationalId()">
+                    כניסה / הרשמה
                 </button>
-                <div class="welcome-login-link" onclick="showLoginForm()">יש לי כבר קוד SHFT</div>
-            </div>
-
-            <!-- Login form -->
-            <div id="login-form" class="login-form" style="display:none">
-                <input type="text" id="login-code-input" class="login-input" placeholder="הכניסי קוד SHFT-XXXX" dir="ltr" autocomplete="off" maxlength="9">
-                <button class="login-submit-btn" onclick="loginWithCode()">התחברי</button>
-                <button class="login-back-btn" onclick="hideLoginForm()">חזרה</button>
+                <div class="welcome-hint">בכניסה ראשונה — את קובעת את ה-PIN. בכניסות הבאות — אותן 4 ספרות.</div>
             </div>
         </div>
     </div>
@@ -498,6 +494,11 @@
                         <div id="telegram-pair-cmd" style="font-family:monospace; font-size:22px; font-weight:bold; margin:6px 0; user-select:all;"></div>
                         <div id="telegram-pair-expires" style="font-size:11px; color:var(--text-secondary);"></div>
                     </div>
+                </div>
+
+                <!-- Sign out -->
+                <div class="profile-section">
+                    <button class="account-copy-btn" onclick="logoutUser()" style="background:transparent; color:var(--danger,#d33);">התנתקי</button>
                 </div>
 
                 <!-- Personal Details -->

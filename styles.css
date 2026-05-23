@@ -130,6 +130,14 @@
     gap: 12px;
 }
 
+.welcome-hint {
+    margin-top: 14px;
+    font-size: 0.8rem;
+    color: #888;
+    text-align: center;
+    line-height: 1.5;
+}
+
 .welcome-btn {
     width: 100%;
     padding: 16px 20px;

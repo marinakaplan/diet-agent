@@ -3126,9 +3126,8 @@ function showToast(msg) {
 function showWelcomeScreen() {
     document.getElementById('welcome-screen').style.display = 'flex';
     document.getElementById('app').style.display = 'none';
-    // Reset to initial state
-    document.getElementById('welcome-main').style.display = '';
-    document.getElementById('login-form').style.display = 'none';
+    const main = document.getElementById('welcome-main');
+    if (main) main.style.display = '';
 }
 
 function hideWelcomeScreen() {
@@ -3136,16 +3135,82 @@ function hideWelcomeScreen() {
     document.getElementById('app').style.display = '';
 }
 
-function showLoginForm() {
-    document.getElementById('welcome-main').style.display = 'none';
-    document.getElementById('login-form').style.display = 'block';
-    document.querySelector('.welcome-options').style.display = 'none';
-    document.getElementById('login-code-input').focus();
+function isValidIsraeliIdClient(id) {
+    if (!/^\d{5,9}$/.test(id)) return false;
+    const padded = id.padStart(9, '0');
+    let sum = 0;
+    for (let i = 0; i < 9; i++) {
+        let n = parseInt(padded[i], 10) * ((i % 2) + 1);
+        if (n > 9) n -= 9;
+        sum += n;
+    }
+    return sum % 10 === 0;
 }
 
-function hideLoginForm() {
-    document.getElementById('login-form').style.display = 'none';
-    document.getElementById('welcome-main').style.display = '';
+async function loginWithNationalId() {
+    const idEl = document.getElementById('auth-id');
+    const pinEl = document.getElementById('auth-pin');
+    const nameEl = document.getElementById('auth-name');
+    const nationalId = (idEl?.value || '').trim();
+    const pin = (pinEl?.value || '').trim();
+    const displayName = (nameEl?.value || '').trim();
+
+    if (!isValidIsraeliIdClient(nationalId)) {
+        showToast('תעודת זהות לא תקינה');
+        idEl?.focus();
+        return;
+    }
+    if (!/^\d{4}$/.test(pin)) {
+        showToast('PIN חייב להיות 4 ספרות');
+        pinEl?.focus();
+        return;
+    }
+
+    showLoading('מתחברת...');
+    try {
+        const linkLocalUserId = getData('userId', null);
+        const resp = await fetch('/api/auth?action=login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ nationalId, pin, displayName, linkLocalUserId }),
+        });
+        const data = await resp.json();
+        if (!resp.ok || data.error) {
+            hideLoading();
+            showToast(data.error || 'שגיאה בהתחברות');
+            return;
+        }
+
+        setData('userId', data.userId);
+        if (data.friendCode) setData('friendCode', data.friendCode);
+        if (displayName) {
+            const profile = getProfile();
+            profile.name = displayName;
+            setData('profile', profile);
+        }
+
+        hideLoading();
+        hideWelcomeScreen();
+        await initApp();
+    } catch (e) {
+        hideLoading();
+        showToast('שגיאה: ' + e.message);
+    }
+}
+
+async function logoutUser() {
+    try {
+        await fetch('/api/auth?action=logout', { method: 'GET', credentials: 'include' });
+    } catch {}
+    // Wipe local data so next login is clean
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('da_')) keys.push(k);
+    }
+    keys.forEach(k => localStorage.removeItem(k));
+    location.reload();
 }
 
 async function startNewAccount() {
@@ -3560,14 +3625,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         navigator.serviceWorker.register('sw.js').catch(() => {});
     }
 
-    // Check if user already has an identity
+    // Check session via cookie first (survives localStorage wipe on iOS PWA)
+    try {
+        const resp = await fetch('/api/auth?action=session', { credentials: 'include' });
+        if (resp.ok) {
+            const s = await resp.json();
+            if (s.authenticated) {
+                setData('userId', s.userId);
+                if (s.friendCode) setData('friendCode', s.friendCode);
+                if (s.displayName) {
+                    const profile = getProfile();
+                    if (!profile.name) {
+                        profile.name = s.displayName;
+                        setData('profile', profile);
+                    }
+                }
+                await initApp();
+                return;
+            }
+        }
+    } catch (e) {
+        console.log('Session check failed:', e.message);
+    }
+
+    // No session — fall back to localStorage userId, else show welcome
     const userId = getData('userId', null);
     if (!userId) {
-        // Show welcome screen for new users
         showWelcomeScreen();
         return;
     }
-
-    // Existing user - go straight to app
     await initApp();
 });
