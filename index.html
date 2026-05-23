@@ -485,6 +485,21 @@
                     <div class="account-sync-status" id="profile-sync-status"></div>
                 </div>
 
+                <!-- Telegram Bot Connect -->
+                <div class="profile-section" id="profile-telegram-section">
+                    <h3>🤖 חיבור לבוט טלגרם</h3>
+                    <p style="color:var(--text-secondary); font-size:13px; margin:4px 0 12px">חברי את הבוט שלך כדי לרשום ארוחות, לקבל סיכומים יומיים ולקבל תזכורות ישירות בטלגרם.</p>
+                    <div id="telegram-status-row" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                        <div id="telegram-status-text" style="font-size:14px; color:var(--text-secondary);">בודקת סטטוס…</div>
+                        <button class="account-copy-btn" id="telegram-connect-btn" onclick="generatePairingCode()">צרי קוד חיבור</button>
+                    </div>
+                    <div id="telegram-pair-display" style="display:none; margin-top:12px; padding:12px; background:var(--bg-secondary); border-radius:8px; text-align:center;">
+                        <div style="font-size:12px; color:var(--text-secondary);">שלחי לבוט את הפקודה:</div>
+                        <div id="telegram-pair-cmd" style="font-family:monospace; font-size:22px; font-weight:bold; margin:6px 0; user-select:all;"></div>
+                        <div id="telegram-pair-expires" style="font-size:11px; color:var(--text-secondary);"></div>
+                    </div>
+                </div>
+
                 <!-- Personal Details -->
                 <div class="profile-section">
                     <h3>פרטים אישיים</h3>

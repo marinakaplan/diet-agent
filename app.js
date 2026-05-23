@@ -207,7 +207,7 @@ function navigateTo(page) {
     if (page === 'food') { refreshFoodLog(); refreshFoodGallery(); loadCachedDayPlan(); }
     if (page === 'groups') refreshGroupsPage();
     if (page === 'metrics') refreshMetrics();
-    if (page === 'profile') loadProfile();
+    if (page === 'profile') { loadProfile(); refreshTelegramStatus(); }
 }
 
 // ============ Dashboard ============
@@ -2544,6 +2544,56 @@ function copyFriendCode() {
         document.execCommand('copy'); document.body.removeChild(ta);
         showToast('הקוד הועתק');
     });
+}
+
+// ============ Telegram Bot Connect ============
+async function refreshTelegramStatus() {
+    const userId = typeof getUserId === 'function' ? getUserId() : getData('userId', null);
+    const txt = document.getElementById('telegram-status-text');
+    if (!txt) return;
+    if (!userId) { txt.textContent = 'יש להתחבר/להירשם קודם'; return; }
+    try {
+        const res = await fetch(`/api/pair?userId=${encodeURIComponent(userId)}`);
+        const data = await res.json();
+        if (data.telegramLinked) {
+            txt.innerHTML = '✅ מחובר לבוט';
+            const btn = document.getElementById('telegram-connect-btn');
+            if (btn) btn.textContent = 'צרי קוד חדש';
+        } else {
+            txt.textContent = 'לא מחובר';
+        }
+    } catch (e) {
+        txt.textContent = '—';
+    }
+}
+
+async function generatePairingCode() {
+    const userId = typeof getUserId === 'function' ? getUserId() : getData('userId', null);
+    if (!userId) { showToast('יש להתחבר קודם'); return; }
+    const btn = document.getElementById('telegram-connect-btn');
+    if (btn) btn.disabled = true;
+    try {
+        const res = await fetch('/api/pair?action=create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'שגיאה');
+
+        const display = document.getElementById('telegram-pair-display');
+        const cmd = document.getElementById('telegram-pair-cmd');
+        const exp = document.getElementById('telegram-pair-expires');
+        cmd.textContent = `/connect ${data.code}`;
+        const min = Math.max(0, Math.round((new Date(data.expiresAt) - Date.now()) / 60000));
+        exp.textContent = `תוקף: ${min} דקות`;
+        display.style.display = 'block';
+        showToast('הקוד נוצר — שלחי לבוט');
+    } catch (e) {
+        showToast(e.message || 'שגיאה ביצירת קוד');
+    } finally {
+        if (btn) btn.disabled = false;
+    }
 }
 
 // ============ Profile ============
