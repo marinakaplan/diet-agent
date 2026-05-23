@@ -3,6 +3,43 @@ import { getSupabase } from './_supabase.js';
 
 export const config = { maxDuration: 60 };
 
+function normalizePlan(p) {
+    if (!p || !p.week) return p;
+    for (const day of p.week) {
+        for (const [mealType, m] of Object.entries(day.meals || {})) {
+            if (!m || typeof m !== 'object') continue;
+            // Compact → verbose
+            if (m.cal !== undefined && !m.macrosPerAdultPortion) {
+                m.macrosPerAdultPortion = { cal: m.cal, p: m.p, c: m.c, f: m.f };
+            }
+            if (m.min !== undefined && m.prepMinutes === undefined) m.prepMinutes = m.min;
+            if (m.kid !== undefined && m.kidVersion === undefined) {
+                m.kidVersion = m.kid;
+                m.needsKidVersion = !!m.kid;
+            }
+            if (m.prep !== undefined && m.mealPrepShared === undefined) m.mealPrepShared = m.prep;
+        }
+    }
+    if (Array.isArray(p.shoppingList)) {
+        p.shoppingList = p.shoppingList.map(it => ({
+            category: it.category || it.cat || 'אחר',
+            name: it.name,
+            qty: it.qty,
+            estimatedTier: it.estimatedTier || it.tier,
+            inPantry: it.inPantry ?? it.have ?? false,
+        }));
+    }
+    if (p.summary && !p.weeklySummary) {
+        p.weeklySummary = {
+            avgDailyCaloriesForUser: p.summary.avgCal,
+            estimatedTotalCost: p.summary.cost,
+            uniqueDishes: p.summary.uniqueDishes,
+            mealsSkipped: p.summary.skipped,
+        };
+    }
+    return p;
+}
+
 const SYSTEM_PROMPT = `את דיאטנית מומחית שמתכננת ארוחות לבית ישראלי. עליך להחזיר תוכנית שבועית JSON תקין בלבד.
 חוקים קריטיים:
 - אל תוסיפי \`\`\`json או \`\`\` או כל markdown סביב התשובה
@@ -46,28 +83,32 @@ function buildUserPrompt({ profile, pantry, constraints, existingRecipes }) {
         }
     }
 
-    promptParts.push(`\nהחזירי JSON במבנה הבא בדיוק:
+    promptParts.push(`\nהחזירי JSON תמציתי. שמות שדות באנגלית, ערכים בעברית. אל תוסיפי שדות מעבר לרשימה. אל תוסיפי ingredients ברמת המנה.
+
 {
   "week": [
     {
       "day": "ראשון",
       "meals": {
-        "בוקר": { "name": "שם המנה", "macrosPerAdultPortion": {"cal": 0, "p": 0, "c": 0, "f": 0}, "prepMinutes": 0, "needsKidVersion": false, "kidVersion": null, "mealPrepShared": null, "ingredients": [{"name":"...","qty":"..."}] },
-        "צהריים": { ... },
-        "ערב": { ... }
+        "בוקר": {"name":"...","cal":0,"p":0,"c":0,"f":0,"min":0,"kid":null,"prep":null},
+        "צהריים": {"name":"...","cal":0,"p":0,"c":0,"f":0,"min":0,"kid":null,"prep":null},
+        "ערב": {"name":"...","cal":0,"p":0,"c":0,"f":0,"min":0,"kid":null,"prep":null}
       }
     }
   ],
   "shoppingList": [
-    { "category": "ירקות", "name": "עגבניות", "qty": "1 קילו", "estimatedTier": "₪", "inPantry": false }
+    {"cat":"ירקות","name":"עגבניות","qty":"1 קילו","tier":"₪","have":false}
   ],
-  "weeklySummary": {
-    "avgDailyCaloriesForUser": 0,
-    "estimatedTotalCost": "₪₪",
-    "uniqueDishes": 0,
-    "mealsSkipped": 0
-  }
-}`);
+  "summary": {"avgCal":0,"cost":"₪₪","uniqueDishes":0,"skipped":0}
+}
+
+הסבר השדות:
+- min = prepMinutes
+- kid = string או null (מנת ילדים אם צריך)
+- prep = string או null (אם המנה היא חזרה של meal prep מהיום הקודם, ציין מאיפה)
+- cat = category
+- tier = ₪/₪₪/₪₪₪
+- have = true אם הפריט כבר במזווה`);
 
     return promptParts.join('\n');
 }
@@ -144,9 +185,7 @@ async function generate(req, res) {
     const text = resp.content.find(b => b.type === 'text')?.text || '';
     let plan;
     try {
-        // Strip ```json / ``` fences if present
         let cleaned = text.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
-        // Greedy match for the outermost { ... }
         const first = cleaned.indexOf('{');
         const last = cleaned.lastIndexOf('}');
         if (first === -1 || last === -1) throw new Error('No JSON object found');
@@ -160,6 +199,9 @@ async function generate(req, res) {
             raw: text.slice(-800),
         });
     }
+
+    // Normalize compact schema back to verbose so frontend stays the same
+    plan = normalizePlan(plan);
 
     // Save plan (upsert by user_id + week_start)
     const planId = 'mp_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
