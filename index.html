@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
-    <link rel="stylesheet" href="styles.css?v=33">
+    <link rel="stylesheet" href="styles.css?v=34">
 </head>
 <body>
     <!-- Welcome / Login Screen -->
@@ -66,10 +66,25 @@
             <div id="meal-planner-empty" class="meal-planner-empty">
                 <div style="font-size:48px">🍽️</div>
                 <h3>שבוע חדש מחכה</h3>
-                <p>הבוט יתכנן עבורך 7 ימים של ארוחות לפי המאקרו, המזווה וההעדפות שלך.</p>
+                <p>הבוט יתכנן 7 ימים של ארוחות לפי המאקרו, המזווה וההעדפות שלך.</p>
                 <div class="meal-planner-week-pick">
                     <label>תחילת השבוע:</label>
                     <input type="date" id="meal-planner-week-start">
+                </div>
+                <div class="meal-planner-scope">
+                    <div class="meal-planner-scope-label">בשביל מי מתכננים?</div>
+                    <div class="meal-planner-scope-options">
+                        <label class="meal-planner-scope-option">
+                            <input type="radio" name="plan-scope" value="me" checked>
+                            <span>👤 רק עבורי</span>
+                            <small>מנות אישיות, מאקרו שלך</small>
+                        </label>
+                        <label class="meal-planner-scope-option">
+                            <input type="radio" name="plan-scope" value="family">
+                            <span>👨‍👩‍👧‍👦 כל הבית</span>
+                            <small>כמויות גדולות יותר, מנת ילדים אופציונלית</small>
+                        </label>
+                    </div>
                 </div>
                 <button class="meal-planner-cta" onclick="generateWeeklyPlan()">
                     ✨ תכנני לי שבוע

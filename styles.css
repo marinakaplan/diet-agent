@@ -5718,3 +5718,36 @@ body {
     cursor: pointer;
     font-size: 18px;
 }
+
+.meal-planner-scope {
+    margin: 16px auto;
+    max-width: 360px;
+    text-align: right;
+}
+.meal-planner-scope-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text, #222);
+}
+.meal-planner-scope-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.meal-planner-scope-option {
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    border: 2px solid var(--border, #e0e0e0);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+}
+.meal-planner-scope-option:has(input:checked) {
+    border-color: var(--accent, #2a9d8f);
+    background: rgba(42, 157, 143, 0.06);
+}
+.meal-planner-scope-option input { display: none; }
+.meal-planner-scope-option span { font-weight: 600; font-size: 0.95rem; }
+.meal-planner-scope-option small { color: var(--text-secondary, #888); font-size: 0.78rem; margin-top: 2px; }

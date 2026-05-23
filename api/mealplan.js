@@ -3,7 +3,11 @@ import { getSupabase } from './_supabase.js';
 
 export const config = { maxDuration: 60 };
 
-const SYSTEM_PROMPT = `את דיאטנית מומחית שמתכננת ארוחות לבית ישראלי. עליך להחזיר תוכנית שבועית JSON תקין בלבד, ללא טקסט נוסף.
+const SYSTEM_PROMPT = `את דיאטנית מומחית שמתכננת ארוחות לבית ישראלי. עליך להחזיר תוכנית שבועית JSON תקין בלבד.
+חוקים קריטיים:
+- אל תוסיפי \`\`\`json או \`\`\` או כל markdown סביב התשובה
+- אל תוסיפי טקסט הסבר לפני או אחרי
+- התשובה חייבת להיות JSON בלבד שמתחיל ב-{ ומסתיים ב-}
 
 עקרונות:
 - שמרי על כשרות והפרדת בשר/חלב אם המשתמשת מבקשת
@@ -17,13 +21,18 @@ const SYSTEM_PROMPT = `את דיאטנית מומחית שמתכננת ארוח�
 - שאפי ל-10-12 מנות ייחודיות בשבוע, לא יותר`;
 
 function buildUserPrompt({ profile, pantry, constraints, existingRecipes }) {
-    const macros = profile.macros || { calories: 1800, protein: 100, carbs: 200, fat: 60 };
+    const macros = profile.macros || profile.targetMacros || { calories: 1800, protein: 100, carbs: 200, fat: 60 };
     const family = profile.family || { adults: 1, kids: [] };
     const prefs = profile.preferences || {};
+    const scope = constraints.scope || 'me';
+
+    const scopeBlock = scope === 'family'
+        ? `מתכננים לכל הבית: ${family.adults} מבוגרים${family.kids?.length ? ` + ${family.kids.length} ילדים בגילי ${family.kids.map(k => k.age).join(', ')}` : ''}. כמויות המתכון לכל בני הבית. הוסיפי מנת ילדים נפרדת רק כשהמנה הראשית לא מתאימה לילדים קטנים. בכל מקרה, "macrosPerAdultPortion" מציג את המנה של המשתמשת בלבד (לא של כל הסיר).`
+        : `מתכננים רק עבור המשתמשת. מנה אחת קטנה לארוחה. ללא מנת ילדים. ללא חישוב לבית.`;
 
     let promptParts = [
         `תכנני שבוע מ${constraints.startDay || 'ראשון'} ל-${profile.name || 'משתמשת'}.`,
-        `הבית: ${family.adults} מבוגרים${family.kids?.length ? ` + ${family.kids.length} ילדים בגילי ${family.kids.map(k => k.age).join(', ')}` : ''}.`,
+        scopeBlock,
         `יעדי מאקרו של המשתמשת (פר-יום): ${JSON.stringify(macros)}`,
         `העדפות: ${JSON.stringify(prefs)}`,
         `מזווה קיים: ${pantry.length ? pantry.join(', ') : 'ריק'}`,
@@ -126,7 +135,7 @@ async function generate(req, res) {
     const t0 = Date.now();
     const resp = await client.messages.create({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 6000,
+        max_tokens: 16000,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userPrompt }],
     });
@@ -135,10 +144,21 @@ async function generate(req, res) {
     const text = resp.content.find(b => b.type === 'text')?.text || '';
     let plan;
     try {
-        const m = text.match(/\{[\s\S]*\}/);
-        plan = JSON.parse(m[0]);
-    } catch {
-        return res.status(500).json({ error: 'Plan generation returned invalid JSON', raw: text.slice(0, 500) });
+        // Strip ```json / ``` fences if present
+        let cleaned = text.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
+        // Greedy match for the outermost { ... }
+        const first = cleaned.indexOf('{');
+        const last = cleaned.lastIndexOf('}');
+        if (first === -1 || last === -1) throw new Error('No JSON object found');
+        plan = JSON.parse(cleaned.slice(first, last + 1));
+    } catch (e) {
+        return res.status(500).json({
+            error: 'Plan generation returned invalid JSON',
+            detail: e.message,
+            stopReason: resp.stop_reason,
+            outputTokens: resp.usage?.output_tokens,
+            raw: text.slice(-800),
+        });
     }
 
     // Save plan (upsert by user_id + week_start)

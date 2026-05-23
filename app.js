@@ -3738,6 +3738,8 @@ async function generateWeeklyPlan() {
     if (!userId) { showToast('יש להתחבר קודם'); return; }
     const weekStart = document.getElementById('meal-planner-week-start').value || getNextSunday();
     _currentPlanWeekStart = weekStart;
+    const scopeEl = document.querySelector('input[name="plan-scope"]:checked');
+    const scope = scopeEl ? scopeEl.value : 'me';
 
     showLoadingState();
     const start = Date.now();
@@ -3751,7 +3753,7 @@ async function generateWeeklyPlan() {
         const resp = await fetch('/api/mealplan', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, weekStart, constraints: { startDay: 'ראשון' } }),
+            body: JSON.stringify({ userId, weekStart, constraints: { startDay: 'ראשון', scope } }),
         });
         clearInterval(tick);
         const data = await resp.json();
