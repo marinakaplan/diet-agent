@@ -1,6 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { getSupabase } from './_supabase.js';
 
+export const config = { maxDuration: 60 };
+
 const SYSTEM_PROMPT = `את דיאטנית מומחית שמתכננת ארוחות לבית ישראלי. עליך להחזיר תוכנית שבועית JSON תקין בלבד, ללא טקסט נוסף.
 
 עקרונות:
@@ -82,7 +84,10 @@ async function getPlan(req, res) {
     else q = q.limit(1);
 
     const { data, error } = await q;
-    if (error) throw error;
+    if (error) {
+        // Likely table not yet migrated — return empty so UI shows the empty state
+        return res.status(200).json({ plan: null, warning: error.message });
+    }
     return res.status(200).json({ plan: data?.[0] || null });
 }
 
@@ -120,8 +125,8 @@ async function generate(req, res) {
     const client = new Anthropic();
     const t0 = Date.now();
     const resp = await client.messages.create({
-        model: 'claude-opus-4-7',
-        max_tokens: 8000,
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 6000,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userPrompt }],
     });
