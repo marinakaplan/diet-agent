@@ -5477,3 +5477,244 @@ body {
     color: var(--text-secondary);
     font-style: italic;
 }
+
+/* ============ Meal Planner ============ */
+.meal-planner-modal {
+    position: fixed;
+    inset: 0;
+    background: var(--bg, #fff);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.meal-planner-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border, #eee);
+    background: var(--bg, #fff);
+}
+.meal-planner-header h2 { margin: 0; font-size: 1.1rem; }
+.meal-planner-close, .meal-planner-pantry {
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    padding: 4px 10px;
+    color: var(--text, #222);
+}
+.meal-planner-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    -webkit-overflow-scrolling: touch;
+}
+.meal-planner-empty {
+    text-align: center;
+    padding: 30px 20px;
+}
+.meal-planner-empty h3 { margin: 16px 0 8px; }
+.meal-planner-empty p { color: var(--text-secondary, #666); margin: 8px 0 20px; line-height: 1.5; }
+.meal-planner-week-pick {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 16px 0;
+}
+.meal-planner-week-pick input {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border, #ddd);
+    font-size: 16px;
+}
+.meal-planner-cta {
+    background: var(--accent, #2a9d8f);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 14px 24px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    max-width: 320px;
+}
+.meal-planner-hint {
+    font-size: 12px;
+    color: var(--text-secondary, #888);
+    margin-top: 10px;
+}
+.meal-planner-loading {
+    text-align: center;
+    padding: 60px 20px;
+}
+.meal-planner-spinner {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 16px;
+    border: 3px solid #eee;
+    border-top-color: var(--accent, #2a9d8f);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.meal-planner-summary {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 10px;
+    background: var(--bg-secondary, #f7f7f7);
+    border-radius: 10px;
+    margin-bottom: 14px;
+    font-size: 13px;
+}
+.meal-planner-summary > div { flex: 1; min-width: 80px; text-align: center; }
+.meal-planner-summary strong { display: block; font-size: 1.1rem; }
+.meal-planner-board {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.mp-day {
+    border: 1px solid var(--border, #eee);
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: var(--bg, #fff);
+}
+.mp-day-header {
+    font-weight: 700;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+.mp-meal {
+    padding: 8px 0;
+    border-top: 1px dashed var(--border, #eee);
+    cursor: pointer;
+}
+.mp-meal:first-of-type { border-top: none; }
+.mp-meal-type {
+    font-size: 11px;
+    color: var(--text-secondary, #888);
+    margin-bottom: 2px;
+}
+.mp-meal-name { font-weight: 600; }
+.mp-meal-meta { font-size: 12px; color: var(--text-secondary, #888); margin-top: 2px; }
+.mp-meal-kid { font-size: 12px; color: var(--accent, #2a9d8f); margin-top: 2px; }
+.mp-meal-prep-tag {
+    display: inline-block;
+    background: #e3f2fd;
+    color: #1565c0;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 8px;
+    margin-right: 4px;
+}
+.mp-meal-skipped { color: var(--text-secondary, #999); font-style: italic; }
+.meal-planner-shopping-toggle {
+    margin-top: 16px;
+    padding: 12px;
+    background: var(--bg-secondary, #f7f7f7);
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.meal-planner-toggle-arrow { margin-right: auto; transition: transform 0.2s; }
+.meal-planner-shopping-toggle.open .meal-planner-toggle-arrow { transform: rotate(180deg); }
+.meal-planner-shopping {
+    padding: 12px;
+    background: var(--bg-secondary, #fafafa);
+    border-radius: 10px;
+    margin-top: 8px;
+}
+.mp-shopping-cat {
+    margin-bottom: 12px;
+}
+.mp-shopping-cat-name {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--text-secondary, #555);
+    margin-bottom: 4px;
+}
+.mp-shopping-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    font-size: 14px;
+}
+.mp-shopping-item input[type=checkbox] { width: 18px; height: 18px; }
+.mp-shopping-item.checked { text-decoration: line-through; opacity: 0.5; }
+.mp-shopping-item .qty { color: var(--text-secondary, #888); font-size: 12px; }
+.mp-shopping-item .tier { color: var(--text-secondary, #aaa); font-size: 12px; }
+.mp-shopping-item .in-pantry { color: var(--accent, #2a9d8f); font-size: 11px; }
+.meal-planner-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+.meal-planner-secondary {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid var(--border, #ddd);
+    background: var(--bg, #fff);
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
+}
+.pantry-hint {
+    font-size: 13px;
+    color: var(--text-secondary, #666);
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+.pantry-add-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+.pantry-add-row input {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border, #ddd);
+    font-size: 14px;
+}
+.pantry-add-row button {
+    padding: 0 16px;
+    background: var(--accent, #2a9d8f);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    cursor: pointer;
+}
+.pantry-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.pantry-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: var(--bg-secondary, #f7f7f7);
+    border-radius: 8px;
+}
+.pantry-item input[type=checkbox] { width: 20px; height: 20px; }
+.pantry-item.no-have { opacity: 0.55; }
+.pantry-item-name { flex: 1; font-size: 14px; }
+.pantry-item-del {
+    background: none;
+    border: none;
+    color: var(--text-secondary, #999);
+    cursor: pointer;
+    font-size: 18px;
+}

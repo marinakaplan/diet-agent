@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
-    <link rel="stylesheet" href="styles.css?v=32">
+    <link rel="stylesheet" href="styles.css?v=33">
 </head>
 <body>
     <!-- Welcome / Login Screen -->
@@ -51,6 +51,68 @@
             <div class="save-code-actions">
                 <button class="save-code-copy-btn" onclick="copyMyCode()">העתיקי קוד</button>
                 <button class="save-code-done-btn" onclick="closeSaveCodeModal()">הבנתי, יאללה!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weekly Meal Planner Modal -->
+    <div id="meal-planner-modal" class="meal-planner-modal" style="display:none">
+        <div class="meal-planner-header">
+            <button class="meal-planner-close" onclick="closeWeeklyPlanner()">✕</button>
+            <h2>📅 תכנון שבועי</h2>
+            <button class="meal-planner-pantry" onclick="openPantrySync()" title="המזווה שלי">🧺</button>
+        </div>
+        <div class="meal-planner-body">
+            <div id="meal-planner-empty" class="meal-planner-empty">
+                <div style="font-size:48px">🍽️</div>
+                <h3>שבוע חדש מחכה</h3>
+                <p>הבוט יתכנן עבורך 7 ימים של ארוחות לפי המאקרו, המזווה וההעדפות שלך.</p>
+                <div class="meal-planner-week-pick">
+                    <label>תחילת השבוע:</label>
+                    <input type="date" id="meal-planner-week-start">
+                </div>
+                <button class="meal-planner-cta" onclick="generateWeeklyPlan()">
+                    ✨ תכנני לי שבוע
+                </button>
+                <div class="meal-planner-hint">לוקח כדקה. תוכלי לערוך אחרי שהתוכנית מוכנה.</div>
+            </div>
+            <div id="meal-planner-loading" class="meal-planner-loading" style="display:none">
+                <div class="meal-planner-spinner"></div>
+                <div id="meal-planner-loading-text">מתכננת את השבוע שלך…</div>
+                <div class="meal-planner-hint" id="meal-planner-loading-sub">זה לוקח 30-90 שניות. אל תסגרי את החלון.</div>
+            </div>
+            <div id="meal-planner-content" style="display:none">
+                <div id="meal-planner-summary" class="meal-planner-summary"></div>
+                <div id="meal-planner-board" class="meal-planner-board"></div>
+                <div class="meal-planner-shopping-toggle" onclick="toggleShoppingList()">
+                    🛒 <span>רשימת קניות</span>
+                    <span class="meal-planner-toggle-arrow" id="shopping-toggle-arrow">▼</span>
+                </div>
+                <div id="meal-planner-shopping" class="meal-planner-shopping" style="display:none"></div>
+                <div class="meal-planner-actions">
+                    <button class="meal-planner-secondary" onclick="regenerateWeeklyPlan()">🔄 תכנני מחדש</button>
+                    <button class="meal-planner-secondary" onclick="shareShoppingList()">📤 שיתוף רשימה</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pantry sync screen -->
+    <div id="pantry-modal" class="meal-planner-modal" style="display:none">
+        <div class="meal-planner-header">
+            <button class="meal-planner-close" onclick="closePantrySync()">✕</button>
+            <h2>🧺 המזווה שלי</h2>
+            <div></div>
+        </div>
+        <div class="meal-planner-body">
+            <div class="pantry-hint">מה יש לך בבית? סמני ✓ ליד פריטים שיש, או הוסיפי חדשים. הבוט ישתמש בזה לתכנון.</div>
+            <div class="pantry-add-row">
+                <input type="text" id="pantry-add-input" placeholder="הוסיפי פריט (למשל: עגבניות)" />
+                <button onclick="addPantryItem()">+</button>
+            </div>
+            <div id="pantry-list" class="pantry-list"></div>
+            <div class="meal-planner-actions">
+                <button class="meal-planner-secondary" onclick="closePantrySync()">שמירה וסגירה</button>
             </div>
         </div>
     </div>
@@ -182,10 +244,13 @@
             <!-- ==================== FOOD LOG ==================== -->
             <section id="page-food" class="page">
                 <div class="food-sticky-top">
-                <div class="plan-my-day-section">
-                    <button class="btn-plan-day" onclick="planMyDay()">
+                <div class="plan-my-day-section" style="display:flex; gap:8px;">
+                    <button class="btn-plan-day" onclick="planMyDay()" style="flex:1">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                         תכנני לי את היום
+                    </button>
+                    <button class="btn-plan-day" onclick="openWeeklyPlanner()" style="flex:1; background:var(--accent-2, #6a8); ">
+                        📅 תכנון שבועי
                     </button>
                 </div>
                 <div id="day-plan-container" style="display:none"></div>

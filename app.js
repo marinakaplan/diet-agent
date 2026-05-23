@@ -167,13 +167,19 @@ async function loadFromCloud() {
 }
 
 function getProfile() {
-    return getData('profile', {
+    const stored = getData('profile', {});
+    return {
         name: '', age: '', height: '', gender: '',
         activityLevel: 'light',
         targetWeight: '', targetCalories: '',
         targetProtein: '', targetCarbs: '', targetFat: '', targetFiber: '',
-        apiKey: ''
-    });
+        apiKey: '',
+        // Meal planner additions
+        allergies: [],
+        preferences: { kosher: false, meatDairySeparate: false, dislikes: [], dietStyle: '' },
+        family: { adults: 1, kids: [], adultPortionFactor: 2, kidPortionFactor: 1.5 },
+        ...stored,
+    };
 }
 
 function getTodayKey(offset = 0) {
@@ -3656,3 +3662,295 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     await initApp();
 });
+
+// ============================================
+// Meal Planner
+// ============================================
+
+let _currentPlan = null;
+let _currentPlanWeekStart = null;
+let _pantryCache = [];
+
+function getNextSunday() {
+    const d = new Date();
+    const day = d.getDay();
+    const daysUntilSunday = day === 0 ? 0 : (7 - day);
+    d.setDate(d.getDate() + daysUntilSunday);
+    return d.toISOString().split('T')[0];
+}
+
+function openWeeklyPlanner() {
+    const modal = document.getElementById('meal-planner-modal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+
+    // Set default week start
+    const dateInput = document.getElementById('meal-planner-week-start');
+    if (dateInput && !dateInput.value) dateInput.value = getNextSunday();
+
+    loadExistingPlan();
+}
+
+function closeWeeklyPlanner() {
+    const m = document.getElementById('meal-planner-modal');
+    if (m) m.style.display = 'none';
+}
+
+async function loadExistingPlan() {
+    const userId = getData('userId', null);
+    if (!userId) return;
+    try {
+        const resp = await fetch(`/api/mealplan?userId=${userId}`);
+        const data = await resp.json();
+        if (data.plan) {
+            _currentPlan = data.plan.plan;
+            _currentPlanWeekStart = data.plan.week_start;
+            renderPlan(_currentPlan);
+        } else {
+            showEmptyState();
+        }
+    } catch (e) {
+        console.log('Load plan failed:', e.message);
+        showEmptyState();
+    }
+}
+
+function showEmptyState() {
+    document.getElementById('meal-planner-empty').style.display = '';
+    document.getElementById('meal-planner-loading').style.display = 'none';
+    document.getElementById('meal-planner-content').style.display = 'none';
+}
+
+function showLoadingState() {
+    document.getElementById('meal-planner-empty').style.display = 'none';
+    document.getElementById('meal-planner-loading').style.display = '';
+    document.getElementById('meal-planner-content').style.display = 'none';
+}
+
+function showContentState() {
+    document.getElementById('meal-planner-empty').style.display = 'none';
+    document.getElementById('meal-planner-loading').style.display = 'none';
+    document.getElementById('meal-planner-content').style.display = '';
+}
+
+async function generateWeeklyPlan() {
+    const userId = getData('userId', null);
+    if (!userId) { showToast('יש להתחבר קודם'); return; }
+    const weekStart = document.getElementById('meal-planner-week-start').value || getNextSunday();
+    _currentPlanWeekStart = weekStart;
+
+    showLoadingState();
+    const start = Date.now();
+    const tick = setInterval(() => {
+        const sec = Math.floor((Date.now() - start) / 1000);
+        const sub = document.getElementById('meal-planner-loading-sub');
+        if (sub) sub.textContent = `${sec} שניות... זה לוקח 30-90 שניות. אל תסגרי את החלון.`;
+    }, 1000);
+
+    try {
+        const resp = await fetch('/api/mealplan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, weekStart, constraints: { startDay: 'ראשון' } }),
+        });
+        clearInterval(tick);
+        const data = await resp.json();
+        if (!resp.ok || data.error) {
+            showEmptyState();
+            showToast('שגיאה: ' + (data.error || 'תכנון נכשל'));
+            return;
+        }
+        _currentPlan = data.plan;
+        renderPlan(_currentPlan);
+    } catch (e) {
+        clearInterval(tick);
+        showEmptyState();
+        showToast('שגיאה: ' + e.message);
+    }
+}
+
+async function regenerateWeeklyPlan() {
+    if (!confirm('לתכנן את השבוע מחדש? התוכנית הנוכחית תוחלף.')) return;
+    await generateWeeklyPlan();
+}
+
+function renderPlan(plan) {
+    if (!plan || !plan.week) { showEmptyState(); return; }
+    showContentState();
+
+    // Summary
+    const s = plan.weeklySummary || {};
+    const summary = document.getElementById('meal-planner-summary');
+    summary.innerHTML = `
+        <div><strong>${s.avgDailyCaloriesForUser || '—'}</strong><div>קלוריות/יום</div></div>
+        <div><strong>${s.estimatedTotalCost || '—'}</strong><div>עלות משוערת</div></div>
+        <div><strong>${s.uniqueDishes || '—'}</strong><div>מנות ייחודיות</div></div>
+    `;
+
+    // Board
+    const board = document.getElementById('meal-planner-board');
+    board.innerHTML = '';
+    for (const day of plan.week) {
+        const dayEl = document.createElement('div');
+        dayEl.className = 'mp-day';
+        let html = `<div class="mp-day-header">▶ ${day.day}</div>`;
+        for (const [mealType, meal] of Object.entries(day.meals || {})) {
+            if (!meal) continue;
+            if (meal.skipped || !meal.name) {
+                html += `<div class="mp-meal mp-meal-skipped"><div class="mp-meal-type">${mealType}</div><div>דילוג${meal.reason ? ' — ' + meal.reason : ''}</div></div>`;
+                continue;
+            }
+            const macros = meal.macrosPerAdultPortion;
+            const macroStr = macros ? `${macros.cal} cal · ${macros.p}p/${macros.c}c/${macros.f}f` : '';
+            const prepTag = meal.mealPrepShared ? `<span class="mp-meal-prep-tag">🔁 meal prep</span>` : '';
+            html += `<div class="mp-meal">
+                <div class="mp-meal-type">${mealType}</div>
+                <div class="mp-meal-name">${prepTag}${meal.name}</div>
+                <div class="mp-meal-meta">${meal.prepMinutes ? meal.prepMinutes + ' דקות · ' : ''}${macroStr}</div>
+                ${meal.needsKidVersion && meal.kidVersion ? `<div class="mp-meal-kid">👶 ילדים: ${typeof meal.kidVersion === 'string' ? meal.kidVersion : meal.kidVersion.name || ''}</div>` : ''}
+            </div>`;
+        }
+        dayEl.innerHTML = html;
+        board.appendChild(dayEl);
+    }
+
+    // Shopping list
+    renderShoppingList(plan.shoppingList || []);
+}
+
+function renderShoppingList(items) {
+    const cont = document.getElementById('meal-planner-shopping');
+    if (!items.length) { cont.innerHTML = '<div style="color:#888">אין רשימת קניות</div>'; return; }
+    const byCat = {};
+    for (const it of items) (byCat[it.category || 'אחר'] ||= []).push(it);
+
+    let html = '';
+    for (const [cat, list] of Object.entries(byCat)) {
+        html += `<div class="mp-shopping-cat"><div class="mp-shopping-cat-name">${cat}</div>`;
+        for (const it of list) {
+            const id = 'sl_' + Math.random().toString(36).slice(2, 8);
+            html += `<label class="mp-shopping-item" for="${id}">
+                <input type="checkbox" id="${id}" onchange="this.closest('.mp-shopping-item').classList.toggle('checked', this.checked)">
+                <span>${it.name}</span>
+                <span class="qty">${it.qty || ''}</span>
+                <span class="tier">${it.estimatedTier || ''}</span>
+                ${it.inPantry ? '<span class="in-pantry">✓ במזווה</span>' : ''}
+            </label>`;
+        }
+        html += '</div>';
+    }
+    cont.innerHTML = html;
+}
+
+function toggleShoppingList() {
+    const wrap = document.getElementById('meal-planner-shopping');
+    const toggle = document.querySelector('.meal-planner-shopping-toggle');
+    const isOpen = wrap.style.display !== 'none';
+    wrap.style.display = isOpen ? 'none' : '';
+    toggle.classList.toggle('open', !isOpen);
+}
+
+function shareShoppingList() {
+    if (!_currentPlan || !_currentPlan.shoppingList) {
+        showToast('אין רשימה לשתף');
+        return;
+    }
+    const byCat = {};
+    for (const it of _currentPlan.shoppingList) {
+        if (it.inPantry) continue;
+        (byCat[it.category || 'אחר'] ||= []).push(it);
+    }
+    let text = '🛒 רשימת קניות לשבוע:\n\n';
+    for (const [cat, list] of Object.entries(byCat)) {
+        text += `▼ ${cat}\n`;
+        for (const it of list) text += `• ${it.name}${it.qty ? ' — ' + it.qty : ''}\n`;
+        text += '\n';
+    }
+    if (navigator.share) {
+        navigator.share({ text }).catch(() => {});
+    } else {
+        navigator.clipboard.writeText(text).then(() => showToast('הרשימה הועתקה'));
+    }
+}
+
+// ============ Pantry sync ============
+async function openPantrySync() {
+    const m = document.getElementById('pantry-modal');
+    m.style.display = 'flex';
+    await loadPantry();
+}
+
+function closePantrySync() {
+    const m = document.getElementById('pantry-modal');
+    if (m) m.style.display = 'none';
+}
+
+async function loadPantry() {
+    const userId = getData('userId', null);
+    if (!userId) return;
+    try {
+        const resp = await fetch(`/api/pantry?userId=${userId}`);
+        const data = await resp.json();
+        _pantryCache = data.items || [];
+        renderPantry();
+    } catch (e) {
+        console.log('Pantry load failed:', e.message);
+    }
+}
+
+function renderPantry() {
+    const list = document.getElementById('pantry-list');
+    if (!list) return;
+    if (!_pantryCache.length) {
+        list.innerHTML = '<div style="text-align:center; color:#999; padding:20px">המזווה ריק. הוסיפי פריטים כדי שהבוט יכיר אותם.</div>';
+        return;
+    }
+    list.innerHTML = '';
+    for (const item of _pantryCache) {
+        const el = document.createElement('div');
+        el.className = 'pantry-item' + (item.has_it ? '' : ' no-have');
+        el.innerHTML = `
+            <input type="checkbox" ${item.has_it ? 'checked' : ''} onchange="togglePantryItem('${item.name.replace(/'/g, "\\'")}', this.checked)">
+            <span class="pantry-item-name">${item.name}</span>
+            <button class="pantry-item-del" onclick="deletePantryItem('${item.name.replace(/'/g, "\\'")}')" title="מחיקה">×</button>
+        `;
+        list.appendChild(el);
+    }
+}
+
+async function addPantryItem() {
+    const input = document.getElementById('pantry-add-input');
+    const name = (input.value || '').trim();
+    if (!name) return;
+    const userId = getData('userId', null);
+    if (!userId) return;
+
+    await fetch('/api/pantry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, items: [{ name, hasIt: true }] }),
+    });
+    input.value = '';
+    await loadPantry();
+}
+
+async function togglePantryItem(name, hasIt) {
+    const userId = getData('userId', null);
+    if (!userId) return;
+    await fetch('/api/pantry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, items: [{ name, hasIt }] }),
+    });
+    const item = _pantryCache.find(i => i.name === name);
+    if (item) item.has_it = hasIt;
+    renderPantry();
+}
+
+async function deletePantryItem(name) {
+    const userId = getData('userId', null);
+    if (!userId) return;
+    await fetch(`/api/pantry?userId=${userId}&name=${encodeURIComponent(name)}`, { method: 'DELETE' });
+    _pantryCache = _pantryCache.filter(i => i.name !== name);
+    renderPantry();
+}
